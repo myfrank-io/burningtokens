@@ -102,8 +102,8 @@ export default function ClaudeSync({ profileId, onSynced }: Props) {
     "w-full rounded-xl border border-zinc-700 bg-zinc-900/70 px-4 py-2.5 text-white outline-none transition focus:border-orange-500/60";
 
   return (
-    <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
-      <h2 className="text-xl font-bold">API Anthropic (organisations)</h2>
+    <section className="mt-4 flex flex-col gap-4">
+      <h2 className="font-bold text-zinc-200">API Anthropic (organisations)</h2>
 
       {connection?.status === "connected" ? (
         <>

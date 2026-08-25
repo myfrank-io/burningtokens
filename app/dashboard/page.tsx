@@ -11,7 +11,6 @@ import { getSupabaseBrowser } from "@/lib/supabase";
 const HANDLE_RE = /^[a-z0-9][a-z0-9._-]{0,37}[a-z0-9]$/;
 const TOKENS_PREFIX_RE = /^\d+tokens$/; // réservé : préfixe d'URL /1000tokens/…
 const RESERVED = ["login", "dashboard", "api", "admin", "auth", "settings", "account", "www", "app", "moi"];
-const MODELS = ["claude-opus-4", "claude-sonnet-4", "claude-haiku-4-5", "autre"];
 
 type Profile = {
   id: string;
@@ -25,14 +24,12 @@ type Profile = {
   cli_synced_at: string | null;
 };
 
-type Totals = { total_tokens: number; events: number };
-
 export default function DashboardPage() {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [totals, setTotals] = useState<Totals | null>(null);
+  const [totalTokens, setTotalTokens] = useState<number | null>(null);
 
   // Formulaire profil
   const [handle, setHandle] = useState("");
@@ -43,13 +40,7 @@ export default function DashboardPage() {
   const [claudeSince, setClaudeSince] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ ok: boolean; text: string } | null>(null);
-
-  // Formulaire conso
-  const [inputTokens, setInputTokens] = useState("");
-  const [outputTokens, setOutputTokens] = useState("");
-  const [model, setModel] = useState(MODELS[0]);
-  const [burning, setBurning] = useState(false);
-  const [burnMsg, setBurnMsg] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const loadProfile = useCallback(async (userId: string) => {
     const supabase = getSupabaseBrowser();
@@ -68,10 +59,10 @@ export default function DashboardPage() {
       setClaudeSince(data.claude_since ?? "");
       const { data: t } = await supabase
         .from("profile_burn_totals")
-        .select("total_tokens, events")
+        .select("total_tokens")
         .eq("profile_id", data.id)
         .maybeSingle();
-      if (t) setTotals({ total_tokens: Number(t.total_tokens), events: Number(t.events) });
+      if (t) setTotalTokens(Number(t.total_tokens));
     }
   }, []);
 
@@ -95,11 +86,11 @@ export default function DashboardPage() {
     if (!session) return;
     const cleanHandle = handle.trim().toLowerCase();
     if (!HANDLE_RE.test(cleanHandle)) {
-      setSaveMsg({ ok: false, text: "Handle invalide : 2 à 39 caractères (minuscules, chiffres, . - ou _), commence et finit par une lettre ou un chiffre." });
+      setSaveMsg({ ok: false, text: "Pseudo invalide : 2 à 39 caractères (minuscules, chiffres, . - ou _)." });
       return;
     }
     if (RESERVED.includes(cleanHandle) || TOKENS_PREFIX_RE.test(cleanHandle)) {
-      setSaveMsg({ ok: false, text: "Ce handle est réservé." });
+      setSaveMsg({ ok: false, text: "Ce pseudo est réservé." });
       return;
     }
     setSaving(true);
@@ -113,7 +104,6 @@ export default function DashboardPage() {
       avatar_url: avatarUrl.trim() || null,
       claude_since: claudeSince || null,
     };
-    // Le trigger crée normalement le profil à l'inscription ; upsert au cas où.
     const { error } = profile
       ? await supabase.from("profiles").update(fields).eq("id", profile.id)
       : await supabase.from("profiles").insert({ ...fields, user_id: session.user.id });
@@ -121,46 +111,16 @@ export default function DashboardPage() {
       setSaveMsg({
         ok: false,
         text: error.code === "23505"
-          ? `Le handle « ${cleanHandle} » est déjà pris, essaie-en un autre.`
+          ? `« ${cleanHandle} » est déjà pris, essaie-en un autre.`
           : error.code === "23514"
-          ? "Handle invalide ou réservé."
+          ? "Pseudo invalide ou réservé."
           : `Erreur : ${error.message}`,
       });
     } else {
-      setSaveMsg({ ok: true, text: "Profil enregistré ✓" });
+      setSaveMsg({ ok: true, text: "Enregistré ✓" });
       await loadProfile(session.user.id);
     }
     setSaving(false);
-  }
-
-  async function burnTokens(e: React.FormEvent) {
-    e.preventDefault();
-    if (!profile) return;
-    const inTok = Math.max(0, parseInt(inputTokens || "0", 10) || 0);
-    const outTok = Math.max(0, parseInt(outputTokens || "0", 10) || 0);
-    if (inTok + outTok === 0) {
-      setBurnMsg("Indique au moins un nombre de tokens.");
-      return;
-    }
-    setBurning(true);
-    setBurnMsg(null);
-    const supabase = getSupabaseBrowser();
-    const { error } = await supabase.from("usage_events").insert({
-      profile_id: profile.id,
-      model: model === "autre" ? null : model,
-      input_tokens: inTok,
-      output_tokens: outTok,
-      source: "manual",
-    });
-    if (error) {
-      setBurnMsg(`Erreur : ${error.message}`);
-    } else {
-      setBurnMsg(`🔥 ${new Intl.NumberFormat("fr-FR").format(inTok + outTok)} tokens ajoutés — ton compteur public vient de bouger en direct.`);
-      setInputTokens("");
-      setOutputTokens("");
-      setTotals((t) => t ? { total_tokens: t.total_tokens + inTok + outTok, events: t.events + 1 } : { total_tokens: inTok + outTok, events: 1 });
-    }
-    setBurning(false);
   }
 
   async function signOut() {
@@ -168,18 +128,20 @@ export default function DashboardPage() {
     router.replace("/");
   }
 
-  // Lien du jour : le nombre de tokens dans l'URL est recalculé chaque nuit à
-  // minuit ; tout ancien nombre reste un lien valide.
+  // Un seul lien, affiché et copié à l'identique. Le nombre est recalculé
+  // chaque nuit à minuit ; les anciens nombres restent des liens valides.
+  const host = typeof window !== "undefined" ? window.location.host : "";
   const dailyPath = profile ? `/${profile.display_tokens}tokens/${profile.handle}` : null;
-  const [copied, setCopied] = useState(false);
+  const dailyLink = dailyPath && host ? `${host}${dailyPath}` : null;
+
   async function copyDailyLink() {
-    if (!dailyPath) return;
+    if (!dailyLink) return;
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${dailyPath}`);
+      await navigator.clipboard.writeText(`https://${dailyLink}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* clipboard indisponible : l'utilisateur copiera à la main */
+      /* clipboard indisponible */
     }
   }
 
@@ -211,85 +173,110 @@ export default function DashboardPage() {
   const labelCls = "text-left text-sm font-medium text-zinc-400";
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-8 px-6 py-12">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 px-6 py-10">
       <header className="flex items-center justify-between">
         <Link href="/" className="text-2xl">🔥</Link>
-        <div className="flex items-center gap-4 text-sm">
-          {dailyPath && (
-            <Link href={dailyPath} className="text-orange-400 hover:text-orange-300">
-              Voir ma page publique ↗
-            </Link>
-          )}
-          <button onClick={signOut} className="text-zinc-500 hover:text-zinc-300">
-            Se déconnecter
-          </button>
-        </div>
+        <button onClick={signOut} className="text-sm text-zinc-500 hover:text-zinc-300">
+          Se déconnecter
+        </button>
       </header>
 
-      {totals && (
-        <div className="flame-glow rounded-2xl border border-orange-500/20 bg-zinc-900/70 px-6 py-5 text-center">
-          <div className="text-xs uppercase tracking-widest text-zinc-400">Ton total</div>
-          <div className="flame-text mt-1 text-3xl font-extrabold tabular-nums">
-            {new Intl.NumberFormat("fr-FR").format(totals.total_tokens)}
+      {profile && (
+        <section className="flame-glow flex flex-col gap-4 rounded-3xl border border-orange-500/20 bg-zinc-900/70 p-6 text-center">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-zinc-400">
+              Tokens brûlés
+            </div>
+            <div className="flame-text mt-1 text-4xl font-extrabold tabular-nums">
+              {new Intl.NumberFormat("fr-FR").format(totalTokens ?? profile.display_tokens)}
+            </div>
           </div>
-          <div className="mt-1 text-xs text-zinc-500">{totals.events} événement(s)</div>
-        </div>
+          {dailyLink && (
+            <div className="flex items-center gap-2">
+              <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2.5 text-sm text-orange-300">
+                {dailyLink}
+              </code>
+              <button
+                onClick={copyDailyLink}
+                className="shrink-0 rounded-lg bg-gradient-to-r from-orange-500 to-rose-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+              >
+                {copied ? "Copié ✓" : "Copier"}
+              </button>
+            </div>
+          )}
+          <div className="flex items-center justify-center gap-4 text-sm">
+            {dailyPath && (
+              <Link href={dailyPath} className="text-orange-400 hover:text-orange-300">
+                Voir ma page ↗
+              </Link>
+            )}
+            <span className="text-zinc-600">
+              Ce lien va dans ta bio LinkedIn — le nombre se met à jour chaque
+              nuit, les anciens liens marchent toujours.
+            </span>
+          </div>
+        </section>
       )}
 
-      {profile && dailyPath && (
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 px-5 py-4">
-          <div className="text-sm font-medium text-zinc-400">
-            Ton lien du jour (mis à jour chaque nuit à minuit) :
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <code className="flex-1 truncate rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-orange-300">
-              iburned.my{dailyPath}
-            </code>
-            <button
-              onClick={copyDailyLink}
-              className="shrink-0 rounded-lg border border-orange-500/40 px-3 py-2 text-sm text-orange-300 transition hover:bg-orange-500/10"
-            >
-              {copied ? "Copié ✓" : "Copier"}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-zinc-600">
-            Colle-le dans ta bio LinkedIn — même quand le nombre change, tous
-            tes anciens liens continuent de fonctionner.
-          </p>
-        </div>
-      )}
-
-      <form onSubmit={saveProfile} className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold">Mon profil</h1>
+      <form
+        onSubmit={saveProfile}
+        className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5"
+      >
+        <h2 className="font-bold">
+          <span className="text-orange-400">1.</span> Ton profil
+        </h2>
         <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Handle (ton lien : iburned.my/1000tokens/…)</label>
+          <label className={labelCls}>Ton pseudo</label>
           <div className="flex items-center gap-2">
             <span className="text-zinc-500">@</span>
-            <input value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="joseph.lecomte" required className={inputCls} />
+            <input
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.toLowerCase())}
+              placeholder="joseph.lecomte"
+              required
+              className={inputCls}
+            />
           </div>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Nom affiché</label>
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Jean Dupont" className={inputCls} />
+          <label className={labelCls}>Ton profil LinkedIn</label>
+          <input
+            type="url"
+            value={linkedinUrl}
+            onChange={(e) => setLinkedinUrl(e.target.value)}
+            placeholder="https://www.linkedin.com/in/…"
+            className={inputCls}
+          />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Headline</label>
-          <input value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Brûleur de tokens professionnel" className={inputCls} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>URL LinkedIn</label>
-          <input type="url" value={linkedinUrl} onChange={(e) => setLinkedinUrl(e.target.value)} placeholder="https://www.linkedin.com/in/…" className={inputCls} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>URL avatar (optionnel)</label>
-          <input type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…/photo.jpg" className={inputCls} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Compte Claude ouvert le</label>
-          <input type="date" value={claudeSince} onChange={(e) => setClaudeSince(e.target.value)} className={inputCls} />
-        </div>
-        <button type="submit" disabled={saving} className="mt-1 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-8 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50">
-          {saving ? "Enregistrement…" : profile ? "Enregistrer" : "Réserver mon handle 🔥"}
+        <details className="text-sm text-zinc-500">
+          <summary className="cursor-pointer transition hover:text-zinc-300">
+            Plus d&apos;options (nom, photo, bio…)
+          </summary>
+          <div className="mt-3 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className={labelCls}>Nom affiché</label>
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Jean Dupont" className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className={labelCls}>Phrase d&apos;accroche</label>
+              <input value={headline} onChange={(e) => setHeadline(e.target.value)} placeholder="Brûleur de tokens professionnel" className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className={labelCls}>URL de ta photo</label>
+              <input type="url" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://…/photo.jpg" className={inputCls} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className={labelCls}>Compte Claude ouvert le</label>
+              <input type="date" value={claudeSince} onChange={(e) => setClaudeSince(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+        </details>
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-8 py-3 font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
         {saveMsg && (
           <p className={`text-sm ${saveMsg.ok ? "text-emerald-400" : "text-rose-400"}`}>{saveMsg.text}</p>
@@ -304,42 +291,15 @@ export default function DashboardPage() {
       )}
 
       {profile && (
-        <ClaudeSync
-          profileId={profile.id}
-          onSynced={() => loadProfile(session.user.id)}
-        />
-      )}
-
-      {profile && (
-        <form onSubmit={burnTokens} className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
-          <h2 className="text-xl font-bold">Ajouter des tokens brûlés</h2>
-          <p className="text-sm text-zinc-500">
-            En attendant la synchro automatique avec l&apos;API Anthropic, déclare ta
-            conso ici — ton compteur public se met à jour en direct.
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Tokens input</label>
-              <input type="number" min="0" value={inputTokens} onChange={(e) => setInputTokens(e.target.value)} placeholder="0" className={inputCls} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Tokens output</label>
-              <input type="number" min="0" value={outputTokens} onChange={(e) => setOutputTokens(e.target.value)} placeholder="0" className={inputCls} />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className={labelCls}>Modèle</label>
-            <select value={model} onChange={(e) => setModel(e.target.value)} className={inputCls}>
-              {MODELS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" disabled={burning} className="rounded-full border border-orange-500/40 px-8 py-3 font-semibold text-orange-300 transition hover:bg-orange-500/10 disabled:opacity-50">
-            {burning ? "En cours…" : "Brûler 🔥"}
-          </button>
-          {burnMsg && <p className="text-sm text-zinc-300">{burnMsg}</p>}
-        </form>
+        <details className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 text-sm text-zinc-500">
+          <summary className="cursor-pointer font-medium transition hover:text-zinc-300">
+            Options avancées (API Anthropic pour les organisations)
+          </summary>
+          <ClaudeSync
+            profileId={profile.id}
+            onSynced={() => loadProfile(session.user.id)}
+          />
+        </details>
       )}
     </main>
   );
