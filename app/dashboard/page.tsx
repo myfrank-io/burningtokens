@@ -22,6 +22,7 @@ type Profile = {
   linkedin_url: string | null;
   claude_since: string | null;
   display_tokens: number;
+  cli_synced_at: string | null;
 };
 
 type Totals = { total_tokens: number; events: number };
@@ -54,7 +55,7 @@ export default function DashboardPage() {
     const supabase = getSupabaseBrowser();
     const { data } = await supabase
       .from("profiles")
-      .select("id, handle, display_name, headline, avatar_url, linkedin_url, claude_since, display_tokens")
+      .select("id, handle, display_name, headline, avatar_url, linkedin_url, claude_since, display_tokens, cli_synced_at")
       .eq("user_id", userId)
       .maybeSingle();
     if (data) {
@@ -295,7 +296,12 @@ export default function DashboardPage() {
         )}
       </form>
 
-      {profile && <CliSync onSynced={() => loadProfile(session.user.id)} />}
+      {profile && (
+        <CliSync
+          cliSyncedAt={profile.cli_synced_at}
+          onSynced={() => loadProfile(session.user.id)}
+        />
+      )}
 
       {profile && (
         <ClaudeSync
