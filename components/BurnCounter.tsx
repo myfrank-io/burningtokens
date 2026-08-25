@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createSupabaseClient } from "@/lib/supabase";
+import { getSupabaseBrowser } from "@/lib/supabase";
 
 type Props = {
   profileId: string;
@@ -28,7 +28,7 @@ export default function BurnCounter({
   }, [ratePerSecond]);
 
   useEffect(() => {
-    const supabase = createSupabaseClient();
+    const supabase = getSupabaseBrowser();
     const channel = supabase
       .channel(`burn-${profileId}`)
       .on(

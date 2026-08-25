@@ -44,8 +44,14 @@ export default async function Home() {
 
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <Link
-          href="/demo"
+          href="/login"
           className="rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-8 py-3 font-semibold text-white transition hover:opacity-90"
+        >
+          Réserver mon handle 🔥
+        </Link>
+        <Link
+          href="/demo"
+          className="rounded-full border border-zinc-700 px-8 py-3 font-semibold text-zinc-300 transition hover:border-orange-500/50 hover:text-white"
         >
           Voir un profil démo →
         </Link>

@@ -18,6 +18,30 @@ tokens brûlés sur Anthropic depuis l'ouverture de leur compte Claude.
 | `/` | Landing page + total global brûlé sur la plateforme |
 | `/[handle]` | Profil public : compteur live, lien LinkedIn, estimation tokens/heure |
 | `/demo` | Profil de démonstration (données seedées) |
+| `/login` | Connexion « Sign in with LinkedIn » (Supabase Auth, provider `linkedin_oidc`) |
+| `/dashboard` | Espace connecté : réserver/modifier son handle, éditer son profil, déclarer des tokens brûlés |
+
+## Authentification
+
+Uniquement via LinkedIn (`signInWithOAuth({ provider: "linkedin_oidc" })`),
+session persistée côté navigateur. À la première connexion, un trigger crée
+automatiquement le profil en récupérant le **nom** et la **photo** LinkedIn
+depuis les métadonnées OIDC ; l'utilisateur personnalise ensuite son handle
+sur `/dashboard`. Les handles correspondant à des routes de l'app sont
+réservés (contrainte en base `handle_not_reserved`).
+
+⚠️ Configuration requise (une seule fois) :
+
+1. **LinkedIn Developers** (https://developer.linkedin.com → Create app) :
+   ajouter le produit *« Sign In with LinkedIn using OpenID Connect »*, et
+   dans Auth → Redirect URLs :
+   `https://fziuboaggtxtewfvqbsb.supabase.co/auth/v1/callback`
+2. **Supabase Dashboard** → Authentication → Sign In / Providers →
+   **LinkedIn (OIDC)** : activer et coller le Client ID + Client Secret de
+   l'app LinkedIn.
+3. **Supabase Dashboard** → Authentication → URL Configuration :
+   `Site URL = https://burningtokens.vercel.app`, et ajouter
+   `https://burningtokens.vercel.app/dashboard` aux Redirect URLs.
 
 ## Modèle de données
 
@@ -53,7 +77,6 @@ npm run dev
 
 ## Prochaines étapes
 
-- Authentification (magic link) + onboarding "réserver mon handle"
 - Synchronisation réelle de la consommation via l'Admin API Anthropic
   (clé d'admin d'organisation, jamais exposée côté client — à stocker en
   secret serveur / Edge Function)
