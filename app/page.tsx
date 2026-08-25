@@ -70,8 +70,8 @@ export default async function Home() {
           },
           {
             step: "2",
-            title: "Connectez Claude",
-            text: "Synchronisez votre consommation Anthropic depuis le début de votre compte.",
+            title: "Branchez votre terminal",
+            text: "Une commande, et votre conso Claude Code exacte est synchronisée depuis le début.",
           },
           {
             step: "3",

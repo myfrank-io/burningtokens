@@ -103,7 +103,7 @@ export default function ClaudeSync({ profileId, onSynced }: Props) {
 
   return (
     <section className="flex flex-col gap-4 border-t border-zinc-800 pt-8">
-      <h2 className="text-xl font-bold">Connexion compte Claude</h2>
+      <h2 className="text-xl font-bold">API Anthropic (organisations)</h2>
 
       {connection?.status === "connected" ? (
         <>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import ClaudeSync from "@/components/ClaudeSync";
+import CliSync from "@/components/CliSync";
 import { getSupabaseBrowser } from "@/lib/supabase";
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9._-]{0,37}[a-z0-9]$/;
@@ -293,6 +294,8 @@ export default function DashboardPage() {
           <p className={`text-sm ${saveMsg.ok ? "text-emerald-400" : "text-rose-400"}`}>{saveMsg.text}</p>
         )}
       </form>
+
+      {profile && <CliSync onSynced={() => loadProfile(session.user.id)} />}
 
       {profile && (
         <ClaudeSync
