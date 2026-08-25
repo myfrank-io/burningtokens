@@ -19,6 +19,7 @@ type Profile = {
   avatar_url: string | null;
   linkedin_url: string | null;
   claude_since: string | null;
+  display_tokens: number;
 };
 
 type Totals = { total_tokens: number; events: number };
@@ -51,7 +52,7 @@ export default function DashboardPage() {
     const supabase = getSupabaseBrowser();
     const { data } = await supabase
       .from("profiles")
-      .select("id, handle, display_name, headline, avatar_url, linkedin_url, claude_since")
+      .select("id, handle, display_name, headline, avatar_url, linkedin_url, claude_since, display_tokens")
       .eq("user_id", userId)
       .maybeSingle();
     if (data) {
@@ -164,6 +165,21 @@ export default function DashboardPage() {
     router.replace("/");
   }
 
+  // Lien du jour : le nombre de tokens dans l'URL est recalculé chaque nuit à
+  // minuit ; tout ancien nombre reste un lien valide.
+  const dailyPath = profile ? `/${profile.display_tokens}tokens/${profile.handle}` : null;
+  const [copied, setCopied] = useState(false);
+  async function copyDailyLink() {
+    if (!dailyPath) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${dailyPath}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard indisponible : l'utilisateur copiera à la main */
+    }
+  }
+
   if (!authChecked) {
     return (
       <main className="flex min-h-screen items-center justify-center text-zinc-500">
@@ -196,8 +212,8 @@ export default function DashboardPage() {
       <header className="flex items-center justify-between">
         <Link href="/" className="text-2xl">🔥</Link>
         <div className="flex items-center gap-4 text-sm">
-          {profile && (
-            <Link href={`/1000tokens/${profile.handle}`} className="text-orange-400 hover:text-orange-300">
+          {dailyPath && (
+            <Link href={dailyPath} className="text-orange-400 hover:text-orange-300">
               Voir ma page publique ↗
             </Link>
           )}
@@ -214,6 +230,29 @@ export default function DashboardPage() {
             {new Intl.NumberFormat("fr-FR").format(totals.total_tokens)}
           </div>
           <div className="mt-1 text-xs text-zinc-500">{totals.events} événement(s)</div>
+        </div>
+      )}
+
+      {profile && dailyPath && (
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 px-5 py-4">
+          <div className="text-sm font-medium text-zinc-400">
+            Ton lien du jour (mis à jour chaque nuit à minuit) :
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <code className="flex-1 truncate rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-orange-300">
+              iburned.my{dailyPath}
+            </code>
+            <button
+              onClick={copyDailyLink}
+              className="shrink-0 rounded-lg border border-orange-500/40 px-3 py-2 text-sm text-orange-300 transition hover:bg-orange-500/10"
+            >
+              {copied ? "Copié ✓" : "Copier"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-zinc-600">
+            Colle-le dans ta bio LinkedIn — même quand le nombre change, tous
+            tes anciens liens continuent de fonctionner.
+          </p>
         </div>
       )}
 

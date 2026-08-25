@@ -59,6 +59,11 @@ sont réservés (contraintes en base `handle_not_reserved` et
   `output_tokens`, modèle, source `manual | api_sync | import`).
 - `profile_burn_totals` — vue d'agrégats par profil (totaux, premier/dernier
   événement).
+- `profiles.display_tokens` — le nombre affiché dans le lien du jour
+  (`iburned.my/<N>tokens/<handle>`), recalculé **chaque nuit à minuit**
+  (Europe/Paris, job pg_cron `iburned-refresh-display-tokens` à 22:00 UTC)
+  via `refresh_display_tokens()`. Les anciens nombres restent des liens
+  valides.
 
 **RLS** : lecture publique des profils `is_public` et de leurs événements ;
 écriture réservée au propriétaire (`user_id = auth.uid()`).
