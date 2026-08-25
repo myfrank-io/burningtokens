@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import ClaudeSync from "@/components/ClaudeSync";
 import CliSync from "@/components/CliSync";
+import { formatTokensSlug } from "@/lib/format";
 import { getSupabaseBrowser } from "@/lib/supabase";
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9._-]{0,37}[a-z0-9]$/;
@@ -131,7 +132,9 @@ export default function DashboardPage() {
   // Un seul lien, affiché et copié à l'identique. Le nombre est recalculé
   // chaque nuit à minuit ; les anciens nombres restent des liens valides.
   const host = typeof window !== "undefined" ? window.location.host : "";
-  const dailyPath = profile ? `/${profile.display_tokens}tokens/${profile.handle}` : null;
+  const dailyPath = profile
+    ? `/${formatTokensSlug(profile.display_tokens)}tokens/${profile.handle}`
+    : null;
   const dailyLink = dailyPath && host ? `${host}${dailyPath}` : null;
 
   async function copyDailyLink() {

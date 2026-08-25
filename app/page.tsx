@@ -32,7 +32,7 @@ export default async function Home() {
       </p>
 
       <code className="rounded-full border border-zinc-800 bg-zinc-900/60 px-5 py-2 text-sm text-orange-300">
-        iburned.my/1000tokens/joseph.lecomte
+        iburned.my/127Mtokens/joseph.lecomte
       </code>
 
       {globalTotal > 0 && (

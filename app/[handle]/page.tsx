@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProfilePage({ params }: Props) {
   const { handle } = await params;
-  // "1000tokens" seul est un préfixe d'URL, pas un profil.
-  if (/^\d+tokens$/i.test(handle)) notFound();
+  // "127Mtokens" seul est un préfixe d'URL, pas un profil.
+  if (/^\d+[km]?tokens$/i.test(handle)) notFound();
   return <ProfileView handle={handle} />;
 }

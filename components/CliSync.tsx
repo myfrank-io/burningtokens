@@ -91,10 +91,26 @@ export default function CliSync({ cliSyncedAt, onSynced }: Props) {
               </button>
             </div>
           </div>
+          <div>
+            La synchro auto tourne à <strong>23h50</strong> et à chaque ouverture
+            de session — pas en continu. Pour vérifier sur macOS :
+            <pre className="mt-1.5 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2.5 text-xs text-zinc-400">{`launchctl list | grep iburned    # installé ?
+launchctl start my.iburned.sync  # forcer une synchro maintenant
+cat ~/.iburned/sync.log          # voir le dernier passage`}</pre>
+          </div>
           <p>
             Désinstaller : même commande avec <code>--uninstall</code>. Windows :
             passe par WSL. Le script n&apos;envoie que des compteurs de tokens par
-            jour — jamais ton code ni tes conversations. Ton jeton est personnel.
+            jour — jamais ton code ni tes conversations (
+            <a
+              href="https://github.com/myfrank-io/burningtokens/blob/main/public/iburned.js"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-400 hover:text-orange-300"
+            >
+              code source public
+            </a>
+            ). Ton jeton est personnel.
           </p>
         </div>
       </details>
