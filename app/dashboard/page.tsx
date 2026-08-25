@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { getSupabaseBrowser } from "@/lib/supabase";
 
-const HANDLE_RE = /^[a-z0-9][a-z0-9_-]{1,38}$/;
+const HANDLE_RE = /^[a-z0-9][a-z0-9._-]{0,37}[a-z0-9]$/;
+const TOKENS_PREFIX_RE = /^\d+tokens$/; // réservé : préfixe d'URL /1000tokens/…
 const RESERVED = ["login", "dashboard", "api", "admin", "auth", "settings", "account", "www", "app", "moi"];
 const MODELS = ["claude-opus-4", "claude-sonnet-4", "claude-haiku-4-5", "autre"];
 
@@ -90,10 +91,10 @@ export default function DashboardPage() {
     if (!session) return;
     const cleanHandle = handle.trim().toLowerCase();
     if (!HANDLE_RE.test(cleanHandle)) {
-      setSaveMsg({ ok: false, text: "Handle invalide : 2 à 39 caractères, minuscules, chiffres, - ou _." });
+      setSaveMsg({ ok: false, text: "Handle invalide : 2 à 39 caractères (minuscules, chiffres, . - ou _), commence et finit par une lettre ou un chiffre." });
       return;
     }
-    if (RESERVED.includes(cleanHandle)) {
+    if (RESERVED.includes(cleanHandle) || TOKENS_PREFIX_RE.test(cleanHandle)) {
       setSaveMsg({ ok: false, text: "Ce handle est réservé." });
       return;
     }
@@ -196,7 +197,7 @@ export default function DashboardPage() {
         <Link href="/" className="text-2xl">🔥</Link>
         <div className="flex items-center gap-4 text-sm">
           {profile && (
-            <Link href={`/${profile.handle}`} className="text-orange-400 hover:text-orange-300">
+            <Link href={`/1000tokens/${profile.handle}`} className="text-orange-400 hover:text-orange-300">
               Voir ma page publique ↗
             </Link>
           )}
@@ -219,10 +220,10 @@ export default function DashboardPage() {
       <form onSubmit={saveProfile} className="flex flex-col gap-4">
         <h1 className="text-xl font-bold">Mon profil</h1>
         <div className="flex flex-col gap-1.5">
-          <label className={labelCls}>Handle (ton lien : burningtokens.vercel.app/…)</label>
+          <label className={labelCls}>Handle (ton lien : iburned.my/1000tokens/…)</label>
           <div className="flex items-center gap-2">
             <span className="text-zinc-500">@</span>
-            <input value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="tonhandle" required className={inputCls} />
+            <input value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase())} placeholder="joseph.lecomte" required className={inputCls} />
           </div>
         </div>
         <div className="flex flex-col gap-1.5">

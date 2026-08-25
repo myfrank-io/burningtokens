@@ -22,7 +22,7 @@ export default async function Home() {
       <div className="flicker text-6xl">🔥</div>
 
       <h1 className="text-5xl font-extrabold tracking-tight sm:text-6xl">
-        <span className="flame-text">Burning Tokens</span>
+        <span className="flame-text">iBurned</span>
       </h1>
 
       <p className="max-w-xl text-lg text-zinc-300">
@@ -30,6 +30,10 @@ export default async function Home() {
         nombre de tokens que vous avez brûlés sur Anthropic depuis l&apos;ouverture
         de votre compte Claude.
       </p>
+
+      <code className="rounded-full border border-zinc-800 bg-zinc-900/60 px-5 py-2 text-sm text-orange-300">
+        iburned.my/1000tokens/joseph.lecomte
+      </code>
 
       {globalTotal > 0 && (
         <div className="flame-glow rounded-2xl border border-orange-500/20 bg-zinc-900/60 px-8 py-6">
@@ -62,7 +66,7 @@ export default async function Home() {
           {
             step: "1",
             title: "Créez votre profil",
-            text: "Réservez votre handle : burningtokens sur votre bio LinkedIn.",
+            text: "Connectez-vous avec LinkedIn et réservez votre handle iBurned.",
           },
           {
             step: "2",
@@ -89,7 +93,7 @@ export default async function Home() {
       </section>
 
       <footer className="mt-10 text-sm text-zinc-500">
-        Propulsé par Claude &amp; Supabase — myfrank.io
+        iBurned — propulsé par Claude &amp; Supabase — myfrank.io
       </footer>
     </main>
   );

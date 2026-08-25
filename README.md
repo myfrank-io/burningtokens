@@ -1,7 +1,11 @@
-# 🔥 Burning Tokens
+# 🔥 iBurned
 
 Le link-in-bio pour utilisateurs LinkedIn qui affiche **en direct** le nombre de
 tokens brûlés sur Anthropic depuis l'ouverture de leur compte Claude.
+
+Domaine cible : **iburned.my** — liens utilisateurs au format
+`iburned.my/1000tokens/joseph.lecomte` (tout préfixe `<nombre>tokens`
+fonctionne, ainsi que `/joseph.lecomte` en accès direct).
 
 ## Stack
 
@@ -17,6 +21,7 @@ tokens brûlés sur Anthropic depuis l'ouverture de leur compte Claude.
 |---|---|
 | `/` | Landing page + total global brûlé sur la plateforme |
 | `/[handle]` | Profil public : compteur live, lien LinkedIn, estimation tokens/heure |
+| `/1000tokens/[handle]` | Lien canonique du profil (tout préfixe `<nombre>tokens` est accepté) |
 | `/demo` | Profil de démonstration (données seedées) |
 | `/login` | Connexion « Sign in with LinkedIn » (Supabase Auth, provider `linkedin_oidc`) |
 | `/dashboard` | Espace connecté : réserver/modifier son handle, éditer son profil, déclarer des tokens brûlés |
@@ -27,8 +32,10 @@ Uniquement via LinkedIn (`signInWithOAuth({ provider: "linkedin_oidc" })`),
 session persistée côté navigateur. À la première connexion, un trigger crée
 automatiquement le profil en récupérant le **nom** et la **photo** LinkedIn
 depuis les métadonnées OIDC ; l'utilisateur personnalise ensuite son handle
-sur `/dashboard`. Les handles correspondant à des routes de l'app sont
-réservés (contrainte en base `handle_not_reserved`).
+sur `/dashboard`. Les handles acceptent les points (`joseph.lecomte`).
+Les handles correspondant à des routes de l'app ou au motif `<nombre>tokens`
+sont réservés (contraintes en base `handle_not_reserved` et
+`profiles_handle_check`).
 
 ⚠️ Configuration requise (une seule fois) :
 
