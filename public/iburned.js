@@ -91,10 +91,13 @@ async function sync(token) {
     .sort()
     .map(([date, t]) => ({ date, input_tokens: t.input, output_tokens: t.output }));
   const total = days.reduce((s, d) => s + d.input_tokens + d.output_tokens, 0);
+  // Synchro par machine : chaque machine remplace uniquement ses propres
+  // données, le compteur additionne toutes tes machines.
+  const machine = os.hostname();
 
   console.log(
-    `🔥 iBurned — ${files} session(s) Claude Code analysée(s), ` +
-      `${days.length} jour(s) d'activité, ${total.toLocaleString("fr-FR")} tokens brûlés.`,
+    `🔥 iBurned [${machine}] — ${files} session(s) Claude Code analysée(s), ` +
+      `${days.length} jour(s) d'activité, ${total.toLocaleString("fr-FR")} tokens brûlés sur cette machine.`,
   );
   if (!days.length) {
     console.log("Aucune consommation Claude Code trouvée sur cette machine.");
@@ -104,14 +107,14 @@ async function sync(token) {
   const res = await fetch(INGEST_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, days }),
+    body: JSON.stringify({ token, days, machine }),
   });
   let out = {};
   try { out = await res.json(); } catch { /* réponse non JSON */ }
   if (!res.ok || out.error) {
     throw new Error(`Échec de l'envoi : ${out.error || `HTTP ${res.status}`}`);
   }
-  console.log(`✓ Compteur mis à jour : ${Number(out.total).toLocaleString("fr-FR")} tokens au total.`);
+  console.log(`✓ Compteur mis à jour : ${Number(out.total).toLocaleString("fr-FR")} tokens au total (toutes machines confondues).`);
   if (out.link) console.log(`→ Ton lien du jour : ${out.link}`);
 }
 
