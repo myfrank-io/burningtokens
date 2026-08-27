@@ -1,0 +1,29 @@
+{
+  "name": "iburned",
+  "version": "0.1.0",
+  "description": "Synchronise ta consommation Claude Code (tokens exacts) vers ton compteur public iBurned — le link-in-bio des brûleurs de tokens.",
+  "bin": {
+    "iburned": "./iburned.js"
+  },
+  "files": [
+    "iburned.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "tokens",
+    "usage",
+    "iburned"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myfrank-io/burningtokens.git",
+    "directory": "cli"
+  },
+  "homepage": "https://burningtokens.vercel.app",
+  "license": "MIT"
+}
