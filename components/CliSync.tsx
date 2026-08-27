@@ -74,6 +74,12 @@ export default function CliSync({ cliSyncedAt, onSynced }: Props) {
         </button>
       </div>
 
+      <p className="text-xs text-zinc-600">
+        ⚠ À coller dans <strong>ton</strong> terminal (Terminal, iTerm…) — pas
+        dans une session Claude : son garde-fou refuse d&apos;exécuter des
+        scripts distants, c&apos;est normal et c&apos;est sain.
+      </p>
+
       <button
         onClick={onSynced}
         className="self-start text-sm text-zinc-500 underline-offset-2 transition hover:text-zinc-300 hover:underline"
@@ -132,7 +138,19 @@ cat ~/.iburned/sync.log          # voir le dernier passage`}</pre>
             >
               code source public
             </a>
-            ). Ton jeton est personnel — ne le partage pas.
+            ). Ton jeton est personnel — s&apos;il a fuité (collé dans un chat,
+            un screenshot…),{" "}
+            <button
+              onClick={async () => {
+                const { data } = await getSupabaseBrowser().rpc("rotate_upload_token");
+                if (typeof data === "string") setToken(data);
+              }}
+              className="text-orange-400 underline-offset-2 hover:text-orange-300 hover:underline"
+            >
+              régénère-le ici
+            </button>{" "}
+            (l&apos;ancien est révoqué immédiatement ; relance ensuite la
+            commande <code>--install</code> avec le nouveau).
           </p>
         </div>
       </details>
