@@ -39,7 +39,10 @@ function collectUsage() {
     path.join(HOME, ".config", "claude", "projects"),
   ];
   const seen = new Set();
-  const daily = new Map();
+  // Totaux par (session, jour). L'identifiant de session est le nom du
+  // fichier transcript : le serveur fait l'union — une même session vue
+  // depuis plusieurs environnements (Mac, Cowork…) ne compte qu'une fois.
+  const perSessionDay = new Map();
   let files = 0;
 
   for (const root of roots) {
@@ -53,6 +56,7 @@ function collectUsage() {
       for (const f of entries) {
         if (!f.endsWith(".jsonl")) continue;
         files++;
+        const sessionId = f.slice(0, -6);
         let content;
         try { content = fs.readFileSync(path.join(dir, f), "utf8"); } catch { continue; }
         for (const line of content.split("\n")) {
@@ -74,32 +78,31 @@ function collectUsage() {
             (u.cache_read_input_tokens || 0);
           const output = u.output_tokens || 0;
           if (input + output === 0) continue;
-          const cur = daily.get(day) || { input: 0, output: 0 };
+          const mapKey = `${sessionId}|${day}`;
+          const cur = perSessionDay.get(mapKey) || { input: 0, output: 0 };
           cur.input += input;
           cur.output += output;
-          daily.set(day, cur);
+          perSessionDay.set(mapKey, cur);
         }
       }
     }
   }
-  return { files, daily };
+  return { files, perSessionDay };
 }
 
 async function sync(token) {
-  const { files, daily } = collectUsage();
-  const days = [...daily.entries()]
-    .sort()
-    .map(([date, t]) => ({ date, input_tokens: t.input, output_tokens: t.output }));
-  const total = days.reduce((s, d) => s + d.input_tokens + d.output_tokens, 0);
-  // Synchro par machine : chaque machine remplace uniquement ses propres
-  // données, le compteur additionne toutes tes machines.
-  const machine = os.hostname();
+  const { files, perSessionDay } = collectUsage();
+  const sessions = [...perSessionDay.entries()].map(([key, t]) => {
+    const [sessionId, date] = [key.slice(0, key.lastIndexOf("|")), key.slice(key.lastIndexOf("|") + 1)];
+    return { session_id: sessionId, date, input_tokens: t.input, output_tokens: t.output };
+  });
+  const total = sessions.reduce((s, d) => s + d.input_tokens + d.output_tokens, 0);
 
   console.log(
-    `🔥 iBurned [${machine}] — ${files} session(s) Claude Code analysée(s), ` +
-      `${days.length} jour(s) d'activité, ${total.toLocaleString("fr-FR")} tokens brûlés sur cette machine.`,
+    `🔥 iBurned — ${files} session(s) Claude Code trouvée(s) ici, ` +
+      `${total.toLocaleString("fr-FR")} tokens. Envoi au compteur (chaque session ne compte qu'une fois, où qu'elle soit vue)…`,
   );
-  if (!days.length) {
+  if (!sessions.length) {
     console.log("Aucune consommation Claude Code trouvée sur cette machine.");
     return;
   }
@@ -107,7 +110,7 @@ async function sync(token) {
   const res = await fetch(INGEST_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, days, machine }),
+    body: JSON.stringify({ token, sessions }),
   });
   let out = {};
   try { out = await res.json(); } catch { /* réponse non JSON */ }
