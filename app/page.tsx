@@ -65,18 +65,18 @@ export default async function Home() {
         {[
           {
             step: "1",
-            title: "Créez votre profil",
-            text: "Connectez-vous avec LinkedIn et réservez votre handle iBurned.",
+            title: "Connectez-vous avec LinkedIn",
+            text: "Votre profil est prêt en 10 secondes, avec votre nom et votre photo.",
           },
           {
             step: "2",
-            title: "Branchez votre terminal",
-            text: "Une commande, et votre conso Claude Code exacte est synchronisée depuis le début.",
+            title: "Une commande, une fois",
+            text: "Collez-la dans votre terminal : toute votre conso Claude Code remonte, puis se synchronise toute seule chaque soir.",
           },
           {
             step: "3",
-            title: "Flexez en direct",
-            text: "Votre compteur brûle en live sous les yeux de vos visiteurs.",
+            title: "Le lien dans votre bio",
+            text: "Votre compteur brûle en direct sous les yeux de vos visiteurs, mis à jour chaque nuit.",
           },
         ].map((item) => (
           <div

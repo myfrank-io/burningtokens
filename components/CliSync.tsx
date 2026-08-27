@@ -47,19 +47,23 @@ export default function CliSync({ cliSyncedAt, onSynced }: Props) {
   return (
     <section className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
       <h2 className="font-bold">
-        <span className="text-orange-400">2.</span> Branche Claude Code
+        <span className="text-orange-400">2.</span> Branche Claude Code — une
+        commande, une fois
       </h2>
 
       {cliSyncedAt ? (
         <p className={`text-sm ${stale ? "text-amber-400" : "text-emerald-400"}`}>
           {stale
-            ? `⚠ Pas de synchro depuis ${Math.floor(hoursSinceSync!)} h — relance la commande ci-dessous.`
-            : `✓ Synchronisé (${new Date(cliSyncedAt).toLocaleString("fr-FR")})`}
+            ? `⚠ Pas de nouvelles de ta machine depuis ${Math.floor(hoursSinceSync!)} h — elle était sans doute éteinte. Relance la commande ci-dessous (ou attends : ça repart tout seul au prochain démarrage).`
+            : `✓ Synchronisé — dernier passage le ${new Date(cliSyncedAt).toLocaleString("fr-FR")}. Plus rien à faire : ça tourne tout seul chaque soir.`}
         </p>
       ) : (
         <p className="text-sm text-zinc-400">
-          Colle cette commande dans ton terminal. C&apos;est tout : ta conso
-          Claude Code se synchronise ensuite toute seule, chaque soir.
+          Colle cette commande dans le terminal de{" "}
+          <strong>ta machine principale</strong>, une seule fois. Elle envoie
+          tout ton historique Claude Code (exact, depuis le début) et installe
+          la synchro automatique : chaque soir à 23h50 et à chaque démarrage.
+          Ensuite, tu n&apos;y touches plus jamais.
         </p>
       )}
 
@@ -79,11 +83,25 @@ export default function CliSync({ cliSyncedAt, onSynced }: Props) {
 
       <details className="text-sm text-zinc-500">
         <summary className="cursor-pointer transition hover:text-zinc-300">
-          Un souci ? (synchro ponctuelle, désinstallation…)
+          Questions fréquentes (plusieurs machines, vérifier, désinstaller…)
         </summary>
         <div className="mt-3 flex flex-col gap-3">
+          <p>
+            <strong className="text-zinc-400">Plusieurs machines, Cowork ?</strong>{" "}
+            Lance la même commande là-bas si tu veux compter leurs tokens aussi.
+            Chaque session Claude Code ne compte qu&apos;une seule fois, où
+            qu&apos;elle soit vue : le total reste identique partout, rien ne
+            s&apos;écrase, rien ne double.
+          </p>
+          <p>
+            <strong className="text-zinc-400">Je change de Mac ?</strong> Tu ne
+            perds rien : tout ce qui a déjà été synchronisé est conservé sur nos
+            serveurs pour toujours. Lance simplement la commande sur la nouvelle
+            machine.
+          </p>
           <div>
-            Synchro ponctuelle, sans rien installer :
+            <strong className="text-zinc-400">Synchro ponctuelle</strong> (sans
+            rien installer) :
             <div className="mt-1.5 flex items-center gap-2">
               <code className={codeCls}>{manualCommand}</code>
               <button onClick={() => copy(manualCommand, "manual")} className={copyCls}>
@@ -92,16 +110,20 @@ export default function CliSync({ cliSyncedAt, onSynced }: Props) {
             </div>
           </div>
           <div>
-            La synchro auto tourne à <strong>23h50</strong> et à chaque ouverture
-            de session — pas en continu. Pour vérifier sur macOS :
+            <strong className="text-zinc-400">Vérifier que ça tourne</strong>{" "}
+            (macOS) — la synchro passe à 23h50 et à chaque ouverture de session,
+            pas en continu :
             <pre className="mt-1.5 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2.5 text-xs text-zinc-400">{`launchctl list | grep iburned    # installé ?
 launchctl start my.iburned.sync  # forcer une synchro maintenant
 cat ~/.iburned/sync.log          # voir le dernier passage`}</pre>
           </div>
           <p>
-            Désinstaller : même commande avec <code>--uninstall</code>. Windows :
-            passe par WSL. Le script n&apos;envoie que des compteurs de tokens par
-            jour — jamais ton code ni tes conversations (
+            <strong className="text-zinc-400">Désinstaller :</strong> même
+            commande avec <code>--uninstall</code>. Windows : passe par WSL.
+          </p>
+          <p>
+            Le script n&apos;envoie que des compteurs de tokens par jour — jamais
+            ton code, tes prompts ni tes conversations (
             <a
               href="https://github.com/myfrank-io/burningtokens/blob/main/public/iburned.js"
               target="_blank"
@@ -110,7 +132,7 @@ cat ~/.iburned/sync.log          # voir le dernier passage`}</pre>
             >
               code source public
             </a>
-            ). Ton jeton est personnel.
+            ). Ton jeton est personnel — ne le partage pas.
           </p>
         </div>
       </details>
