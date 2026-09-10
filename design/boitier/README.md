@@ -9,16 +9,21 @@ dans un navigateur.
 
 ## Planche 02 — proportion retenue
 
-La proportion est arrêtée : corps large et bas (22 × 16 cellules, 23 avec la
-saillie du bouton, soit 101 × 70 × 52 mm), quatre pattes courtes réparties en
-miroir strict autour de l'axe (colonnes 4 ↔ 16 et 7 ↔ 13), deux ergots à hauteur
-des yeux.
+La proportion est arrêtée : corps large et bas (22 × 16 cellules, soit
+97 × 70 × 52 mm), quatre pattes courtes réparties en miroir strict autour de
+l'axe (colonnes 4 ↔ 16 et 7 ↔ 13), deux ergots à hauteur des yeux.
 
-L'ergot droit est un bouton — la seule asymétrie assumée de l'objet. Il déborde
-d'une cellule sur l'ergot fixe et un jeu de fonctionnement le sépare du corps.
-Appui court : vue suivante parmi quatre (session, semaine, par modèle, crédits
-extra), signalée par quatre points empilés au bord droit de l'écran. Appui long :
-veille.
+La symétrie est tenue jusqu'au bout. L'ergot droit est un bouton, mais rien ne le
+montre : même largeur, même hauteur, même teinte que celui de gauche, à un jeu de
+fonctionnement de quelques dixièmes près. Appui court : vue suivante parmi quatre
+(session, semaine, par modèle, crédits extra), signalée par quatre points empilés
+au bord droit de l'écran. Appui long : veille.
+
+Les yeux sont gris, toujours. La couleur d'état ne vit que dans l'écran ; au
+regard, il ne reste que la forme — six états suffisent.
+
+**Direction retenue : 04, écran ventre.** Les yeux remontent et se taisent, tout
+le bas du corps devient un écran.
 
 Le corps reste sur la trame du sprite — angles à 90°, aucun congé — mais les yeux
 en sortent : ils sont tracés en vecteur, jamais en escalier de pixels.
