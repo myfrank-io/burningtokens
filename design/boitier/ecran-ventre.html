@@ -1,0 +1,441 @@
+<title>Écran ventre</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,300..600&family=Silkscreen:wght@400;700&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --ground:#141110;
+    --sheet:#1B1614;
+    --rule:#3A2F29;
+    --rule-soft:#291F1B;
+    --ink:#F3EAE2;
+    --ink-2:#AC9C91;
+    --ink-3:#75665E;
+    --clay:#D97757;
+    --ok:#5FD79A;
+    --warn:#F7B04A;
+    --crit:#FF5F68;
+  }
+
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, "Times New Roman", serif;
+    font-size:17px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .board{
+    max-width:1140px;
+    margin-inline:auto;
+    padding-inline:clamp(18px, 4vw, 52px);
+    padding-block:clamp(40px, 7vw, 88px) 72px;
+  }
+
+  .mono{
+    font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric:tabular-nums;
+    text-transform:uppercase;
+    letter-spacing:.13em;
+    font-size:11px;
+    font-weight:500;
+    color:var(--ink-3);
+  }
+  .px{ font-family:"Silkscreen", ui-monospace, monospace; }
+
+  /* ---------- cartouche ---------- */
+  .titleblock{ border-top:3px solid var(--clay); padding-top:22px; }
+  .titleblock .eyebrow{ display:flex; flex-wrap:wrap; gap:10px 20px; margin-bottom:clamp(20px,3.6vw,34px); }
+  .titleblock .eyebrow span:first-child{ color:var(--clay); }
+  h1{
+    font-family:"Silkscreen", ui-monospace, monospace;
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:clamp(1.45rem, 4.6vw, 3.1rem);
+    line-height:1.22;
+    letter-spacing:0;
+    margin:0;
+  }
+  h1 em{ font-style:normal; color:var(--clay); }
+  .lede{
+    max-width:60ch; margin:28px 0 0;
+    font-size:clamp(1.05rem,2.1vw,1.28rem); line-height:1.55; color:var(--ink-2);
+  }
+  .lede strong{ color:var(--ink); font-weight:500; }
+
+  .meta{
+    margin-top:clamp(28px,5vw,44px);
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    border-top:1px solid var(--rule); border-bottom:1px solid var(--rule);
+  }
+  .meta div{ padding:14px 18px 15px 0; border-right:1px solid var(--rule-soft); }
+  .meta div:last-child{ border-right:0; }
+  .meta dt{ font-size:10px; letter-spacing:.16em; color:var(--ink-3); }
+  .meta dd{
+    margin:6px 0 0;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px; letter-spacing:.02em; color:var(--ink); text-transform:uppercase;
+  }
+
+  .legend{ margin-top:34px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 26px; }
+  .legend b{ display:inline-flex; align-items:center; gap:8px; font-weight:500; }
+  .legend i{ width:10px; height:10px; display:inline-block; font-style:normal; }
+
+  /* ---------- directions ---------- */
+  .directions{ list-style:none; margin:0; padding:0; }
+  .dir{
+    display:grid;
+    grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
+    gap:clamp(24px,3.6vw,46px);
+    align-items:start;
+    padding-block:clamp(44px,6vw,66px);
+    border-top:1px solid var(--rule);
+  }
+  .dir:first-child{ border-top:0; padding-top:clamp(34px,5vw,52px); }
+
+  .stage{
+    position:relative;
+    border:1px solid var(--rule-soft);
+    background-image:
+      linear-gradient(rgba(255,214,184,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,214,184,.035) 1px, transparent 1px),
+      radial-gradient(112% 84% at 50% 30%, #2B221D 0%, #16110F 56%, #0B0908 100%);
+    background-size:13px 13px, 13px 13px, 100% 100%;
+    overflow:hidden;
+  }
+  .render{ display:block; width:100%; height:auto; }
+  .render rect{ shape-rendering:crispEdges; }
+  .render .eye{ shape-rendering:geometricPrecision; }
+  .caption{
+    display:flex; flex-wrap:wrap; gap:6px 18px; justify-content:space-between;
+    padding:11px 14px;
+    border-top:1px solid var(--rule-soft);
+    background:rgba(9,7,6,.62);
+  }
+  .caption span{ font-size:10px; }
+  .caption .state{ color:var(--ink-2); letter-spacing:0; font-size:10px; }
+
+  .idx{
+    font-family:"Silkscreen", ui-monospace, monospace;
+    font-weight:700;
+    font-size:clamp(1.8rem,4vw,2.5rem);
+    line-height:1;
+    color:var(--rule);
+    display:block;
+    margin-bottom:14px;
+  }
+  .dir h2{
+    margin:0;
+    font-family:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-variation-settings:"wdth" 110;
+    font-weight:700; text-transform:uppercase;
+    font-size:clamp(1.45rem,3vw,1.95rem);
+    line-height:1.02; letter-spacing:-.01em;
+  }
+  .dir h2 small{
+    display:block; margin-top:9px;
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:500; font-size:11px; letter-spacing:.14em;
+    color:var(--clay); text-transform:uppercase;
+  }
+  .tag{
+    display:inline-block; margin-left:12px; vertical-align:middle;
+    font-family:"IBM Plex Mono", monospace; font-size:9.5px; letter-spacing:.15em;
+    text-transform:uppercase; font-weight:600;
+    color:#141110; background:var(--clay); padding:4px 8px;
+  }
+  .is-retained .stage{ border-color:var(--clay); }
+  .dir p{ margin:18px 0 0; max-width:46ch; color:var(--ink-2); }
+  .dir p strong{ color:var(--ink); font-weight:500; }
+
+  .spec{ margin:24px 0 0; }
+  .spec > div{
+    display:grid; grid-template-columns:96px minmax(0,1fr);
+    gap:8px 16px; padding:8px 0;
+    border-top:1px solid var(--rule-soft);
+  }
+  .spec dt{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3); padding-top:2px;
+  }
+  .spec dd{
+    margin:0;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px; line-height:1.5; color:var(--ink-2);
+  }
+  .spec dd b{ color:var(--ink); font-weight:500; }
+  .spec .risk dt{ color:var(--clay); }
+
+  /* ---------- sections ---------- */
+  .section{ padding-block:clamp(46px,6vw,70px); border-top:1px solid var(--rule); }
+  .section h3{
+    margin:0 0 6px;
+    font-family:"Archivo", Arial, sans-serif;
+    font-variation-settings:"wdth" 112;
+    font-weight:800; text-transform:uppercase;
+    font-size:clamp(1.25rem,2.6vw,1.6rem); letter-spacing:-.008em;
+  }
+  .section .kicker{ margin:0 0 26px; max-width:56ch; color:var(--ink-2); }
+
+  .scroller{
+    overflow-x:auto;
+    border:1px solid var(--rule-soft);
+    background:
+      linear-gradient(rgba(255,214,184,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,214,184,.03) 1px, transparent 1px),
+      linear-gradient(180deg,#191412,#110D0C);
+    background-size:13px 13px, 13px 13px, 100% 100%;
+    padding:18px 16px 14px;
+  }
+  .scroller svg{ display:block; height:auto; }
+  .scroller rect{ shape-rendering:crispEdges; }
+  .scroller .eye{ shape-rendering:geometricPrecision; }
+  .map-svg{ width:100%; min-width:560px; }
+  .lineup-svg{ width:100%; min-width:780px; }
+  .ortho-svg{ width:100%; min-width:820px; }
+  .hero{ margin-top:clamp(34px,5vw,52px); }
+  .hero .render{ max-width:760px; margin-inline:auto; }
+  .split{
+    display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+    gap:clamp(24px,3.6vw,46px); align-items:start;
+  }
+  @media (max-width: 880px){ .split{ grid-template-columns:minmax(0,1fr); gap:26px; } }
+
+  .verdict{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(238px,1fr));
+    gap:2px; background:var(--rule-soft);
+    border:1px solid var(--rule-soft); margin-top:8px;
+  }
+  .verdict article{ background:var(--sheet); padding:22px 20px 24px; }
+  .verdict h4{
+    margin:0 0 10px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+    font-weight:600; color:var(--clay);
+  }
+  .verdict p{ margin:0; font-size:15.5px; line-height:1.56; color:var(--ink-2); }
+  .verdict p b{ color:var(--ink); font-weight:500; }
+
+  .closing{
+    margin-top:34px; padding:26px 26px 28px;
+    border-left:3px solid var(--clay);
+    background:linear-gradient(90deg, rgba(217,119,87,.09), transparent 70%);
+  }
+  .closing p{ margin:0; max-width:62ch; font-size:1.06rem; color:var(--ink); }
+  .closing p + p{ margin-top:14px; color:var(--ink-2); }
+
+  footer{
+    margin-top:64px; padding-top:20px; border-top:1px solid var(--rule);
+    display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:space-between;
+  }
+
+  .sm{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums; font-weight:500;
+  }
+
+  @media (max-width: 880px){
+    .dir{ grid-template-columns:minmax(0,1fr); gap:26px; }
+    .meta div{ border-right:0; border-bottom:1px solid var(--rule-soft); }
+  }
+</style>
+<div class="board">
+
+  <header class="titleblock">
+    <div class="eyebrow mono">
+      <span>iBurned</span>
+      <span>Objet compagnon</span>
+      <span>Planche 03 — direction retenue</span>
+    </div>
+    <h1>Écran ventre</h1>
+    <p class="lede">
+      Les yeux remontent et se taisent&nbsp;: deux rectangles <strong>gris foncé</strong>,
+      posés haut, qui ne disent rien. Tout le bas du corps devient un écran, et c'est lui
+      seul qui porte la couleur. Le corps garde la trame du sprite — angles à 90°, aucun
+      congé, quatre pattes en miroir, deux ergots identiques dont l'un, sans le dire,
+      est le bouton.
+    </p>
+
+    <dl class="meta">
+      <div><dt class="mono">Planche</dt><dd>03 / 03</dd></div>
+      <div><dt class="mono">Nature</dt><dd>Direction retenue</dd></div>
+      <div><dt class="mono">Trame</dt><dd>22 × 15 px</dd></div>
+      <div><dt class="mono">Gabarit</dt><dd>97 × 66 × 40 mm</dd></div>
+      <div><dt class="mono">Date</dt><dd>10.09.2026</dd></div>
+      <div><dt class="mono">Étape suivante</dt><dd>Maquette blanche</dd></div>
+    </dl>
+
+    <p class="legend mono">
+      <span>Couleur à l’écran</span>
+      <b><i style="background:var(--ok)"></i>&lt; 60 % — on respire</b>
+      <b><i style="background:var(--warn)"></i>60 → 85 % — on lève la tête</b>
+      <b><i style="background:var(--crit)"></i>&gt; 85 % — on ralentit</b>
+    </p>
+  </header>
+
+  <figure class="stage hero">
+    <svg class="render" viewBox="0 0 440 332" role="img" aria-label="Vue trois-quarts du boîtier : bloc terracotta à arêtes vives, deux yeux gris foncé en haut, grand écran occupant le bas de la face avant, quatre pattes courtes, deux ergots latéraux identiques.">
+      <polygon class="eye" points="100,254 158.5,195.5 184.5,195.5 126,254" fill="#EE9A79"/><polygon class="eye" points="126,254 184.5,195.5 184.5,234.5 126,293" fill="#C0603A"/><polygon class="eye" points="139,254 197.5,195.5 223.5,195.5 165,254" fill="#EE9A79"/><polygon class="eye" points="165,254 223.5,195.5 223.5,234.5 165,293" fill="#C0603A"/><polygon class="eye" points="217,254 275.5,195.5 301.5,195.5 243,254" fill="#EE9A79"/><polygon class="eye" points="243,254 301.5,195.5 301.5,234.5 243,293" fill="#C0603A"/><polygon class="eye" points="256,254 314.5,195.5 340.5,195.5 282,254" fill="#EE9A79"/><polygon class="eye" points="282,254 340.5,195.5 340.5,234.5 282,293" fill="#C0603A"/><polygon class="eye" points="67.5,104.5 87,85 113,85 93.5,104.5" fill="#A54A28"/><polygon class="eye" points="93.5,104.5 113,85 113,124 93.5,143.5" fill="#6B2910"/><rect x="67.5" y="104.5" width="26" height="39" fill="#8A3A1E" stroke="#4A1F0D"/><polygon class="eye" points="74,98 132.5,39.5 366.5,39.5 308,98" fill="#EE9A79"/><polygon class="eye" points="308,98 366.5,39.5 366.5,195.5 308,254" fill="#C0603A"/><rect x="74" y="98" width="221" height="13" fill="#EE9A79"/><rect x="295" y="98" width="13" height="13" fill="#B0512F"/><rect x="74" y="111" width="13" height="13" fill="#EE9A79"/><rect x="87" y="111" width="208" height="13" fill="#D97757"/><rect x="295" y="111" width="13" height="13" fill="#B0512F"/><rect x="74" y="124" width="13" height="13" fill="#EE9A79"/><rect x="87" y="124" width="208" height="13" fill="#D97757"/><rect x="295" y="124" width="13" height="13" fill="#B0512F"/><rect x="74" y="137" width="13" height="13" fill="#EE9A79"/><rect x="87" y="137" width="208" height="13" fill="#D97757"/><rect x="295" y="137" width="13" height="13" fill="#B0512F"/><rect x="74" y="150" width="13" height="13" fill="#EE9A79"/><rect x="87" y="150" width="208" height="13" fill="#D97757"/><rect x="295" y="150" width="13" height="13" fill="#B0512F"/><rect x="74" y="163" width="13" height="13" fill="#EE9A79"/><rect x="87" y="163" width="13" height="13" fill="#D97757"/><rect x="100" y="163" width="182" height="13" fill="#0E0906"/><rect x="282" y="163" width="13" height="13" fill="#D97757"/><rect x="295" y="163" width="13" height="13" fill="#B0512F"/><rect x="74" y="176" width="13" height="13" fill="#EE9A79"/><rect x="87" y="176" width="13" height="13" fill="#D97757"/><rect x="100" y="176" width="182" height="13" fill="#0E0906"/><rect x="282" y="176" width="13" height="13" fill="#D97757"/><rect x="295" y="176" width="13" height="13" fill="#B0512F"/><rect x="74" y="189" width="13" height="13" fill="#EE9A79"/><rect x="87" y="189" width="13" height="13" fill="#D97757"/><rect x="100" y="189" width="182" height="13" fill="#0E0906"/><rect x="282" y="189" width="13" height="13" fill="#D97757"/><rect x="295" y="189" width="13" height="13" fill="#B0512F"/><rect x="74" y="202" width="13" height="13" fill="#EE9A79"/><rect x="87" y="202" width="13" height="13" fill="#D97757"/><rect x="100" y="202" width="182" height="13" fill="#0E0906"/><rect x="282" y="202" width="13" height="13" fill="#D97757"/><rect x="295" y="202" width="13" height="13" fill="#B0512F"/><rect x="74" y="215" width="13" height="13" fill="#EE9A79"/><rect x="87" y="215" width="13" height="13" fill="#D97757"/><rect x="100" y="215" width="182" height="13" fill="#0E0906"/><rect x="282" y="215" width="13" height="13" fill="#D97757"/><rect x="295" y="215" width="13" height="13" fill="#B0512F"/><rect x="74" y="228" width="13" height="13" fill="#EE9A79"/><rect x="87" y="228" width="13" height="13" fill="#D97757"/><rect x="100" y="228" width="182" height="13" fill="#0E0906"/><rect x="282" y="228" width="13" height="13" fill="#D97757"/><rect x="295" y="228" width="13" height="13" fill="#B0512F"/><rect x="74" y="241" width="234" height="13" fill="#B0512F"/><rect x="100" y="254" width="26" height="13" fill="#B0512F"/><rect x="139" y="254" width="26" height="13" fill="#B0512F"/><rect x="217" y="254" width="26" height="13" fill="#B0512F"/><rect x="256" y="254" width="26" height="13" fill="#B0512F"/><rect x="100" y="267" width="26" height="13" fill="#B0512F"/><rect x="139" y="267" width="26" height="13" fill="#B0512F"/><rect x="217" y="267" width="26" height="13" fill="#B0512F"/><rect x="256" y="267" width="26" height="13" fill="#B0512F"/><rect x="100" y="280" width="26" height="13" fill="#8A3A1E"/><rect x="139" y="280" width="26" height="13" fill="#8A3A1E"/><rect x="217" y="280" width="26" height="13" fill="#8A3A1E"/><rect x="256" y="280" width="26" height="13" fill="#8A3A1E"/><polygon class="eye" points="327.5,104.5 347,85 373,85 353.5,104.5" fill="#A54A28"/><polygon class="eye" points="353.5,104.5 373,85 373,124 353.5,143.5" fill="#6B2910"/><rect x="327.5" y="104.5" width="26" height="39" fill="#8A3A1E" stroke="#4A1F0D"/><rect class="eye" x="119.5" y="120.1" width="26" height="33.8" fill="#6E655E"/><rect class="eye" x="236.5" y="120.1" width="26" height="33.8" fill="#6E655E"/><text class="px" x="115.6" y="179.9" font-size="9.1" fill="#9A8778" text-anchor="start">SESSION 5H</text><text class="px" x="115.6" y="215" font-size="26" fill="#F2E7DD" text-anchor="start">76%</text><rect x="191" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="201.4" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="211.8" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="222.2" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="232.6" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="243" y="172.75" width="6.5" height="7.15" fill="#F7B04A"/><rect x="253.4" y="172.75" width="6.5" height="7.15" fill="#33201A"/><rect x="263.8" y="172.75" width="6.5" height="7.15" fill="#33201A"/><text class="px" x="191" y="205.9" font-size="9.1" fill="#9A8778" text-anchor="start">RESET 1H07</text><text class="px" x="191" y="221.5" font-size="9.1" fill="#7A6A5E" text-anchor="start">SEMAINE 41%</text><text class="px" x="115.6" y="234.5" font-size="9.1" fill="#7A6A5E" text-anchor="start">OPUS 22%</text><rect class="eye" x="271.6" y="176" width="3.9" height="3.9" fill="#F7B04A"/><rect class="eye" x="271.6" y="183.28" width="3.9" height="3.9" fill="#33201A"/><rect class="eye" x="271.6" y="190.56" width="3.9" height="3.9" fill="#33201A"/><rect class="eye" x="271.6" y="197.84" width="3.9" height="3.9" fill="#33201A"/>
+    </svg>
+    <figcaption class="caption mono">
+      <span>Perspective cavalière 45° · profondeur réduite de moitié</span>
+      <span class="state px">Écran — 76 % · ambre</span>
+    </figcaption>
+  </figure>
+
+  <section class="section">
+    <div class="split">
+      <figure class="stage">
+        <svg class="render" viewBox="0 0 400 300" role="img" aria-label="Élévation avant du boîtier : yeux gris foncé remontés, écran de quatorze cellules sur six occupant le bas du corps.">
+          <rect x="65" y="38" width="255" height="15" fill="#EE9A79"/><rect x="320" y="38" width="15" height="15" fill="#B0512F"/><rect x="65" y="53" width="15" height="15" fill="#EE9A79"/><rect x="80" y="53" width="240" height="15" fill="#D97757"/><rect x="320" y="53" width="15" height="15" fill="#B0512F"/><rect x="35" y="68" width="30" height="15" fill="#8A3A1E"/><rect x="65" y="68" width="15" height="15" fill="#EE9A79"/><rect x="80" y="68" width="240" height="15" fill="#D97757"/><rect x="320" y="68" width="15" height="15" fill="#B0512F"/><rect x="335" y="68" width="30" height="15" fill="#8A3A1E"/><rect x="35" y="83" width="30" height="15" fill="#8A3A1E"/><rect x="65" y="83" width="15" height="15" fill="#EE9A79"/><rect x="80" y="83" width="240" height="15" fill="#D97757"/><rect x="320" y="83" width="15" height="15" fill="#B0512F"/><rect x="335" y="83" width="30" height="15" fill="#8A3A1E"/><rect x="35" y="98" width="30" height="15" fill="#8A3A1E"/><rect x="65" y="98" width="15" height="15" fill="#EE9A79"/><rect x="80" y="98" width="240" height="15" fill="#D97757"/><rect x="320" y="98" width="15" height="15" fill="#B0512F"/><rect x="335" y="98" width="30" height="15" fill="#8A3A1E"/><rect x="65" y="113" width="15" height="15" fill="#EE9A79"/><rect x="80" y="113" width="15" height="15" fill="#D97757"/><rect x="95" y="113" width="210" height="15" fill="#0E0906"/><rect x="305" y="113" width="15" height="15" fill="#D97757"/><rect x="320" y="113" width="15" height="15" fill="#B0512F"/><rect x="65" y="128" width="15" height="15" fill="#EE9A79"/><rect x="80" y="128" width="15" height="15" fill="#D97757"/><rect x="95" y="128" width="210" height="15" fill="#0E0906"/><rect x="305" y="128" width="15" height="15" fill="#D97757"/><rect x="320" y="128" width="15" height="15" fill="#B0512F"/><rect x="65" y="143" width="15" height="15" fill="#EE9A79"/><rect x="80" y="143" width="15" height="15" fill="#D97757"/><rect x="95" y="143" width="210" height="15" fill="#0E0906"/><rect x="305" y="143" width="15" height="15" fill="#D97757"/><rect x="320" y="143" width="15" height="15" fill="#B0512F"/><rect x="65" y="158" width="15" height="15" fill="#EE9A79"/><rect x="80" y="158" width="15" height="15" fill="#D97757"/><rect x="95" y="158" width="210" height="15" fill="#0E0906"/><rect x="305" y="158" width="15" height="15" fill="#D97757"/><rect x="320" y="158" width="15" height="15" fill="#B0512F"/><rect x="65" y="173" width="15" height="15" fill="#EE9A79"/><rect x="80" y="173" width="15" height="15" fill="#D97757"/><rect x="95" y="173" width="210" height="15" fill="#0E0906"/><rect x="305" y="173" width="15" height="15" fill="#D97757"/><rect x="320" y="173" width="15" height="15" fill="#B0512F"/><rect x="65" y="188" width="15" height="15" fill="#EE9A79"/><rect x="80" y="188" width="15" height="15" fill="#D97757"/><rect x="95" y="188" width="210" height="15" fill="#0E0906"/><rect x="305" y="188" width="15" height="15" fill="#D97757"/><rect x="320" y="188" width="15" height="15" fill="#B0512F"/><rect x="65" y="203" width="270" height="15" fill="#B0512F"/><rect x="95" y="218" width="30" height="15" fill="#B0512F"/><rect x="140" y="218" width="30" height="15" fill="#B0512F"/><rect x="230" y="218" width="30" height="15" fill="#B0512F"/><rect x="275" y="218" width="30" height="15" fill="#B0512F"/><rect x="95" y="233" width="30" height="15" fill="#B0512F"/><rect x="140" y="233" width="30" height="15" fill="#B0512F"/><rect x="230" y="233" width="30" height="15" fill="#B0512F"/><rect x="275" y="233" width="30" height="15" fill="#B0512F"/><rect x="95" y="248" width="30" height="15" fill="#8A3A1E"/><rect x="140" y="248" width="30" height="15" fill="#8A3A1E"/><rect x="230" y="248" width="30" height="15" fill="#8A3A1E"/><rect x="275" y="248" width="30" height="15" fill="#8A3A1E"/><rect class="eye" x="334.175" y="83" width="1.65" height="45" fill="#5E2A16" fill-opacity=".62"/><rect class="eye" x="117.5" y="63.5" width="30" height="39" fill="#6E655E"/><rect class="eye" x="252.5" y="63.5" width="30" height="39" fill="#6E655E"/><text class="px" x="113" y="132.5" font-size="10.5" fill="#9A8778" text-anchor="start">SESSION 5H</text><text class="px" x="113" y="173" font-size="30" fill="#F2E7DD" text-anchor="start">76%</text><rect x="200" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="212" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="224" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="236" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="248" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="260" y="124.25" width="7.5" height="8.25" fill="#F7B04A"/><rect x="272" y="124.25" width="7.5" height="8.25" fill="#33201A"/><rect x="284" y="124.25" width="7.5" height="8.25" fill="#33201A"/><text class="px" x="200" y="162.5" font-size="10.5" fill="#9A8778" text-anchor="start">RESET 1H07</text><text class="px" x="200" y="180.5" font-size="10.5" fill="#7A6A5E" text-anchor="start">SEMAINE 41%</text><text class="px" x="113" y="195.5" font-size="10.5" fill="#7A6A5E" text-anchor="start">OPUS 22%</text><rect class="eye" x="293" y="128" width="4.5" height="4.5" fill="#F7B04A"/><rect class="eye" x="293" y="136.4" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="293" y="144.8" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="293" y="153.2" width="4.5" height="4.5" fill="#33201A"/>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · écran 14 × 6 px</span>
+          <span class="state px">Écran — 76 % · ambre</span>
+        </figcaption>
+      </figure>
+      <div>
+        <h3>L’objet en une fiche</h3>
+        <p class="kicker">
+          Session, reset, semaine et Opus tiennent ensemble sans jamais changer de vue.
+          C’est la version tableau de bord&nbsp;: la bestiole porte l’information plutôt
+          qu’elle ne l’exprime.
+        </p>
+        <dl class="spec">
+          <div><dt>Regard</dt><dd>Rectangles <b>gris foncé</b> #6E655E, coins vifs</dd></div>
+          <div><dt>Couleur</dt><dd><b>Terracotta</b> #D97757 · façade noire</dd></div>
+          <div><dt>Matière</dt><dd>Coque opaque, arêtes vives à 90°</dd></div>
+          <div><dt>Finition</dt><dd>Mat sablé · écran affleurant, sans cadre</dd></div>
+          <div><dt>Écran</dt><dd>14 × 6 cellules · 62 × 26 mm</dd></div>
+          <div><dt>Ergots</dt><dd><b>Carrés</b> 3 × 3 cellules · 13 mm, centrés dans l’épaisseur</dd></div>
+          <div><dt>Commande</dt><dd>Ergot droit, identique au gauche</dd></div>
+          <div><dt>Gabarit</dt><dd>97 × 66 × 40 mm · trame 4,4 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>Le visage se réduit à deux diodes posées au-dessus d’un écran</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Les quatre vues</h3>
+    <p class="kicker">
+      Face, profil droit, dessus, dos — à la même échelle. Le profil est celui qui apprend
+      le plus&nbsp;: l’ergot-bouton y apparaît de face, <strong>carré et centré dans
+      l’épaisseur</strong>, avec la tranche de l’écran affleurant à l’avant et les quatre
+      pattes qui se superposent en une seule. Au dos, le bouton passe à gauche.
+    </p>
+    <div class="scroller">
+      <svg class="ortho-svg" viewBox="0 0 900 214" role="img" aria-label="Quatre vues orthographiques du boîtier à la même échelle : face avec yeux et écran, profil droit montrant l’ergot-bouton et la tranche de l’écran, dessus avec les deux ergots, dos avec la prise USB-C et la sérigraphie.">
+        <rect x="38" y="14" width="153" height="9" fill="#EE9A79"/><rect x="191" y="14" width="9" height="9" fill="#B0512F"/><rect x="38" y="23" width="9" height="9" fill="#EE9A79"/><rect x="47" y="23" width="144" height="9" fill="#D97757"/><rect x="191" y="23" width="9" height="9" fill="#B0512F"/><rect x="20" y="32" width="18" height="9" fill="#8A3A1E"/><rect x="38" y="32" width="9" height="9" fill="#EE9A79"/><rect x="47" y="32" width="144" height="9" fill="#D97757"/><rect x="191" y="32" width="9" height="9" fill="#B0512F"/><rect x="200" y="32" width="18" height="9" fill="#8A3A1E"/><rect x="20" y="41" width="18" height="9" fill="#8A3A1E"/><rect x="38" y="41" width="9" height="9" fill="#EE9A79"/><rect x="47" y="41" width="144" height="9" fill="#D97757"/><rect x="191" y="41" width="9" height="9" fill="#B0512F"/><rect x="200" y="41" width="18" height="9" fill="#8A3A1E"/><rect x="20" y="50" width="18" height="9" fill="#8A3A1E"/><rect x="38" y="50" width="9" height="9" fill="#EE9A79"/><rect x="47" y="50" width="144" height="9" fill="#D97757"/><rect x="191" y="50" width="9" height="9" fill="#B0512F"/><rect x="200" y="50" width="18" height="9" fill="#8A3A1E"/><rect x="38" y="59" width="9" height="9" fill="#EE9A79"/><rect x="47" y="59" width="9" height="9" fill="#D97757"/><rect x="56" y="59" width="126" height="9" fill="#0E0906"/><rect x="182" y="59" width="9" height="9" fill="#D97757"/><rect x="191" y="59" width="9" height="9" fill="#B0512F"/><rect x="38" y="68" width="9" height="9" fill="#EE9A79"/><rect x="47" y="68" width="9" height="9" fill="#D97757"/><rect x="56" y="68" width="126" height="9" fill="#0E0906"/><rect x="182" y="68" width="9" height="9" fill="#D97757"/><rect x="191" y="68" width="9" height="9" fill="#B0512F"/><rect x="38" y="77" width="9" height="9" fill="#EE9A79"/><rect x="47" y="77" width="9" height="9" fill="#D97757"/><rect x="56" y="77" width="126" height="9" fill="#0E0906"/><rect x="182" y="77" width="9" height="9" fill="#D97757"/><rect x="191" y="77" width="9" height="9" fill="#B0512F"/><rect x="38" y="86" width="9" height="9" fill="#EE9A79"/><rect x="47" y="86" width="9" height="9" fill="#D97757"/><rect x="56" y="86" width="126" height="9" fill="#0E0906"/><rect x="182" y="86" width="9" height="9" fill="#D97757"/><rect x="191" y="86" width="9" height="9" fill="#B0512F"/><rect x="38" y="95" width="9" height="9" fill="#EE9A79"/><rect x="47" y="95" width="9" height="9" fill="#D97757"/><rect x="56" y="95" width="126" height="9" fill="#0E0906"/><rect x="182" y="95" width="9" height="9" fill="#D97757"/><rect x="191" y="95" width="9" height="9" fill="#B0512F"/><rect x="38" y="104" width="9" height="9" fill="#EE9A79"/><rect x="47" y="104" width="9" height="9" fill="#D97757"/><rect x="56" y="104" width="126" height="9" fill="#0E0906"/><rect x="182" y="104" width="9" height="9" fill="#D97757"/><rect x="191" y="104" width="9" height="9" fill="#B0512F"/><rect x="38" y="113" width="162" height="9" fill="#B0512F"/><rect x="56" y="122" width="18" height="9" fill="#B0512F"/><rect x="83" y="122" width="18" height="9" fill="#B0512F"/><rect x="137" y="122" width="18" height="9" fill="#B0512F"/><rect x="164" y="122" width="18" height="9" fill="#B0512F"/><rect x="56" y="131" width="18" height="9" fill="#B0512F"/><rect x="83" y="131" width="18" height="9" fill="#B0512F"/><rect x="137" y="131" width="18" height="9" fill="#B0512F"/><rect x="164" y="131" width="18" height="9" fill="#B0512F"/><rect x="56" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="83" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="137" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="164" y="140" width="18" height="9" fill="#8A3A1E"/><rect class="eye" x="199.505" y="41" width="0.99" height="27" fill="#5E2A16" fill-opacity=".62"/><rect class="eye" x="69.5" y="29.3" width="18" height="23.4" fill="#6E655E"/><rect class="eye" x="150.5" y="29.3" width="18" height="23.4" fill="#6E655E"/><text class="sm" x="119" y="179" font-size="11" letter-spacing="1.5" fill="#AC9C91" text-anchor="middle">FACE</text><rect x="264" y="14" width="72" height="9" fill="#EE9A79"/><rect x="336" y="14" width="9" height="9" fill="#B0512F"/><rect x="264" y="23" width="9" height="9" fill="#EE9A79"/><rect x="273" y="23" width="63" height="9" fill="#D97757"/><rect x="336" y="23" width="9" height="9" fill="#B0512F"/><rect x="264" y="32" width="9" height="9" fill="#EE9A79"/><rect x="273" y="32" width="63" height="9" fill="#D97757"/><rect x="336" y="32" width="9" height="9" fill="#B0512F"/><rect x="264" y="41" width="9" height="9" fill="#EE9A79"/><rect x="273" y="41" width="63" height="9" fill="#D97757"/><rect x="336" y="41" width="9" height="9" fill="#B0512F"/><rect x="264" y="50" width="9" height="9" fill="#EE9A79"/><rect x="273" y="50" width="63" height="9" fill="#D97757"/><rect x="336" y="50" width="9" height="9" fill="#B0512F"/><rect x="264" y="59" width="9" height="9" fill="#0E0906"/><rect x="273" y="59" width="63" height="9" fill="#D97757"/><rect x="336" y="59" width="9" height="9" fill="#B0512F"/><rect x="264" y="68" width="9" height="9" fill="#0E0906"/><rect x="273" y="68" width="63" height="9" fill="#D97757"/><rect x="336" y="68" width="9" height="9" fill="#B0512F"/><rect x="264" y="77" width="9" height="9" fill="#0E0906"/><rect x="273" y="77" width="63" height="9" fill="#D97757"/><rect x="336" y="77" width="9" height="9" fill="#B0512F"/><rect x="264" y="86" width="9" height="9" fill="#0E0906"/><rect x="273" y="86" width="63" height="9" fill="#D97757"/><rect x="336" y="86" width="9" height="9" fill="#B0512F"/><rect x="264" y="95" width="9" height="9" fill="#0E0906"/><rect x="273" y="95" width="63" height="9" fill="#D97757"/><rect x="336" y="95" width="9" height="9" fill="#B0512F"/><rect x="264" y="104" width="9" height="9" fill="#0E0906"/><rect x="273" y="104" width="63" height="9" fill="#D97757"/><rect x="336" y="104" width="9" height="9" fill="#B0512F"/><rect x="264" y="113" width="81" height="9" fill="#B0512F"/><rect x="282" y="122" width="45" height="9" fill="#B0512F"/><rect x="282" y="131" width="45" height="9" fill="#B0512F"/><rect x="282" y="140" width="45" height="9" fill="#8A3A1E"/><rect class="eye" x="291" y="32" width="27" height="27" fill="#8A3A1E" stroke="#4A1F0D"/><text class="sm" x="304.5" y="179" font-size="11" letter-spacing="1.5" fill="#AC9C91" text-anchor="middle">PROFIL DROIT</text><rect x="409" y="68" width="18" height="9" fill="#EE9A79"/><rect x="427" y="68" width="126" height="9" fill="#0E0906"/><rect x="553" y="68" width="9" height="9" fill="#EE9A79"/><rect x="562" y="68" width="9" height="9" fill="#B0512F"/><rect x="409" y="77" width="9" height="9" fill="#EE9A79"/><rect x="418" y="77" width="144" height="9" fill="#D97757"/><rect x="562" y="77" width="9" height="9" fill="#B0512F"/><rect x="409" y="86" width="9" height="9" fill="#EE9A79"/><rect x="418" y="86" width="144" height="9" fill="#D97757"/><rect x="562" y="86" width="9" height="9" fill="#B0512F"/><rect x="409" y="95" width="9" height="9" fill="#EE9A79"/><rect x="418" y="95" width="144" height="9" fill="#D97757"/><rect x="562" y="95" width="9" height="9" fill="#B0512F"/><rect x="409" y="104" width="9" height="9" fill="#EE9A79"/><rect x="418" y="104" width="144" height="9" fill="#D97757"/><rect x="562" y="104" width="9" height="9" fill="#B0512F"/><rect x="409" y="113" width="9" height="9" fill="#EE9A79"/><rect x="418" y="113" width="144" height="9" fill="#D97757"/><rect x="562" y="113" width="9" height="9" fill="#B0512F"/><rect x="409" y="122" width="9" height="9" fill="#EE9A79"/><rect x="418" y="122" width="144" height="9" fill="#D97757"/><rect x="562" y="122" width="9" height="9" fill="#B0512F"/><rect x="409" y="131" width="9" height="9" fill="#EE9A79"/><rect x="418" y="131" width="144" height="9" fill="#D97757"/><rect x="562" y="131" width="9" height="9" fill="#B0512F"/><rect x="409" y="140" width="162" height="9" fill="#B0512F"/><rect class="eye" x="391" y="95" width="18" height="27" fill="#8A3A1E"/><rect class="eye" x="571" y="95" width="18" height="27" fill="#8A3A1E"/><text class="sm" x="490" y="179" font-size="11" letter-spacing="1.5" fill="#AC9C91" text-anchor="middle">DESSUS</text><rect x="653" y="14" width="153" height="9" fill="#EE9A79"/><rect x="806" y="14" width="9" height="9" fill="#B0512F"/><rect x="653" y="23" width="9" height="9" fill="#EE9A79"/><rect x="662" y="23" width="144" height="9" fill="#D97757"/><rect x="806" y="23" width="9" height="9" fill="#B0512F"/><rect x="635" y="32" width="18" height="9" fill="#8A3A1E"/><rect x="653" y="32" width="9" height="9" fill="#EE9A79"/><rect x="662" y="32" width="144" height="9" fill="#D97757"/><rect x="806" y="32" width="9" height="9" fill="#B0512F"/><rect x="815" y="32" width="18" height="9" fill="#8A3A1E"/><rect x="635" y="41" width="18" height="9" fill="#8A3A1E"/><rect x="653" y="41" width="9" height="9" fill="#EE9A79"/><rect x="662" y="41" width="144" height="9" fill="#D97757"/><rect x="806" y="41" width="9" height="9" fill="#B0512F"/><rect x="815" y="41" width="18" height="9" fill="#8A3A1E"/><rect x="635" y="50" width="18" height="9" fill="#8A3A1E"/><rect x="653" y="50" width="9" height="9" fill="#EE9A79"/><rect x="662" y="50" width="144" height="9" fill="#D97757"/><rect x="806" y="50" width="9" height="9" fill="#B0512F"/><rect x="815" y="50" width="18" height="9" fill="#8A3A1E"/><rect x="653" y="59" width="9" height="9" fill="#EE9A79"/><rect x="662" y="59" width="144" height="9" fill="#D97757"/><rect x="806" y="59" width="9" height="9" fill="#B0512F"/><rect x="653" y="68" width="9" height="9" fill="#EE9A79"/><rect x="662" y="68" width="144" height="9" fill="#D97757"/><rect x="806" y="68" width="9" height="9" fill="#B0512F"/><rect x="653" y="77" width="9" height="9" fill="#EE9A79"/><rect x="662" y="77" width="144" height="9" fill="#D97757"/><rect x="806" y="77" width="9" height="9" fill="#B0512F"/><rect x="653" y="86" width="9" height="9" fill="#EE9A79"/><rect x="662" y="86" width="54" height="9" fill="#D97757"/><rect x="716" y="86" width="36" height="9" fill="#0E0906"/><rect x="752" y="86" width="54" height="9" fill="#D97757"/><rect x="806" y="86" width="9" height="9" fill="#B0512F"/><rect x="653" y="95" width="9" height="9" fill="#EE9A79"/><rect x="662" y="95" width="54" height="9" fill="#D97757"/><rect x="716" y="95" width="36" height="9" fill="#0E0906"/><rect x="752" y="95" width="54" height="9" fill="#D97757"/><rect x="806" y="95" width="9" height="9" fill="#B0512F"/><rect x="653" y="104" width="9" height="9" fill="#EE9A79"/><rect x="662" y="104" width="144" height="9" fill="#D97757"/><rect x="806" y="104" width="9" height="9" fill="#B0512F"/><rect x="653" y="113" width="162" height="9" fill="#B0512F"/><rect x="671" y="122" width="18" height="9" fill="#B0512F"/><rect x="698" y="122" width="18" height="9" fill="#B0512F"/><rect x="752" y="122" width="18" height="9" fill="#B0512F"/><rect x="779" y="122" width="18" height="9" fill="#B0512F"/><rect x="671" y="131" width="18" height="9" fill="#B0512F"/><rect x="698" y="131" width="18" height="9" fill="#B0512F"/><rect x="752" y="131" width="18" height="9" fill="#B0512F"/><rect x="779" y="131" width="18" height="9" fill="#B0512F"/><rect x="671" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="698" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="752" y="140" width="18" height="9" fill="#8A3A1E"/><rect x="779" y="140" width="18" height="9" fill="#8A3A1E"/><text class="px" x="734" y="68" font-size="7.65" fill="#A85A38" text-anchor="middle">IBURNED</text><text class="sm" x="734" y="179" font-size="11" letter-spacing="1.5" fill="#AC9C91" text-anchor="middle">DOS</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>La proportion</h3>
+    <p class="kicker">
+      22 × 15 cellules, soit 97 × 66 mm hors tout, sur 40 mm de profondeur. Les quatre pattes sont réparties en
+      miroir strict autour de l’axe — la paire extérieure en 4 et 16, la paire intérieure
+      en 7 et 13 — avec le grand écart au milieu, comme sur le dessin d’origine.
+      <strong>L’ergot droit est le bouton, et rien ne le dit</strong>&nbsp;: même largeur,
+      même hauteur, même teinte que celui de gauche. Seul un jeu de fonctionnement de
+      quelques dixièmes le sépare du corps — assez pour qu’il s’enfonce, trop peu pour
+      qu’on le remarque. Le plan le repère en ambre&nbsp;; l’objet, lui, le cache.
+    </p>
+    <div class="scroller">
+      <svg class="map-svg" viewBox="0 0 760 400" role="img" aria-label="Relevé coté du boîtier avec axe de symétrie, cote hors tout de 22 par 16 pixels soit 97 par 70 millimètres, repérage des quatre pattes en miroir et de l’ergot-bouton.">
+        <rect x="242" y="70" width="272" height="16" fill="#EE9A79"/><rect x="514" y="70" width="16" height="16" fill="#B0512F"/><rect x="242" y="86" width="16" height="16" fill="#EE9A79"/><rect x="258" y="86" width="256" height="16" fill="#D97757"/><rect x="514" y="86" width="16" height="16" fill="#B0512F"/><rect x="210" y="102" width="32" height="16" fill="#8A3A1E"/><rect x="242" y="102" width="16" height="16" fill="#EE9A79"/><rect x="258" y="102" width="256" height="16" fill="#D97757"/><rect x="514" y="102" width="16" height="16" fill="#B0512F"/><rect x="530" y="102" width="32" height="16" fill="#8A3A1E"/><rect x="210" y="118" width="32" height="16" fill="#8A3A1E"/><rect x="242" y="118" width="16" height="16" fill="#EE9A79"/><rect x="258" y="118" width="256" height="16" fill="#D97757"/><rect x="514" y="118" width="16" height="16" fill="#B0512F"/><rect x="530" y="118" width="32" height="16" fill="#8A3A1E"/><rect x="210" y="134" width="32" height="16" fill="#8A3A1E"/><rect x="242" y="134" width="16" height="16" fill="#EE9A79"/><rect x="258" y="134" width="256" height="16" fill="#D97757"/><rect x="514" y="134" width="16" height="16" fill="#B0512F"/><rect x="530" y="134" width="32" height="16" fill="#8A3A1E"/><rect x="242" y="150" width="16" height="16" fill="#EE9A79"/><rect x="258" y="150" width="16" height="16" fill="#D97757"/><rect x="274" y="150" width="224" height="16" fill="#0E0906"/><rect x="498" y="150" width="16" height="16" fill="#D97757"/><rect x="514" y="150" width="16" height="16" fill="#B0512F"/><rect x="242" y="166" width="16" height="16" fill="#EE9A79"/><rect x="258" y="166" width="16" height="16" fill="#D97757"/><rect x="274" y="166" width="224" height="16" fill="#0E0906"/><rect x="498" y="166" width="16" height="16" fill="#D97757"/><rect x="514" y="166" width="16" height="16" fill="#B0512F"/><rect x="242" y="182" width="16" height="16" fill="#EE9A79"/><rect x="258" y="182" width="16" height="16" fill="#D97757"/><rect x="274" y="182" width="224" height="16" fill="#0E0906"/><rect x="498" y="182" width="16" height="16" fill="#D97757"/><rect x="514" y="182" width="16" height="16" fill="#B0512F"/><rect x="242" y="198" width="16" height="16" fill="#EE9A79"/><rect x="258" y="198" width="16" height="16" fill="#D97757"/><rect x="274" y="198" width="224" height="16" fill="#0E0906"/><rect x="498" y="198" width="16" height="16" fill="#D97757"/><rect x="514" y="198" width="16" height="16" fill="#B0512F"/><rect x="242" y="214" width="16" height="16" fill="#EE9A79"/><rect x="258" y="214" width="16" height="16" fill="#D97757"/><rect x="274" y="214" width="224" height="16" fill="#0E0906"/><rect x="498" y="214" width="16" height="16" fill="#D97757"/><rect x="514" y="214" width="16" height="16" fill="#B0512F"/><rect x="242" y="230" width="16" height="16" fill="#EE9A79"/><rect x="258" y="230" width="16" height="16" fill="#D97757"/><rect x="274" y="230" width="224" height="16" fill="#0E0906"/><rect x="498" y="230" width="16" height="16" fill="#D97757"/><rect x="514" y="230" width="16" height="16" fill="#B0512F"/><rect x="242" y="246" width="288" height="16" fill="#B0512F"/><rect x="274" y="262" width="32" height="16" fill="#B0512F"/><rect x="322" y="262" width="32" height="16" fill="#B0512F"/><rect x="418" y="262" width="32" height="16" fill="#B0512F"/><rect x="466" y="262" width="32" height="16" fill="#B0512F"/><rect x="274" y="278" width="32" height="16" fill="#B0512F"/><rect x="322" y="278" width="32" height="16" fill="#B0512F"/><rect x="418" y="278" width="32" height="16" fill="#B0512F"/><rect x="466" y="278" width="32" height="16" fill="#B0512F"/><rect x="274" y="294" width="32" height="16" fill="#8A3A1E"/><rect x="322" y="294" width="32" height="16" fill="#8A3A1E"/><rect x="418" y="294" width="32" height="16" fill="#8A3A1E"/><rect x="466" y="294" width="32" height="16" fill="#8A3A1E"/><rect class="eye" x="529.12" y="118" width="1.76" height="48" fill="#5E2A16" fill-opacity=".62"/><line x1="210" y1="40" x2="562" y2="40" stroke="#AC9C91" stroke-width="1"/><line x1="210" y1="34" x2="210" y2="46" stroke="#AC9C91" stroke-width="1"/><line x1="562" y1="34" x2="562" y2="46" stroke="#AC9C91" stroke-width="1"/><text class="sm" x="386" y="28" font-size="10" letter-spacing="1.4" fill="#AC9C91" text-anchor="middle">22 × 15 PX · 97 × 66 MM</text><line x1="386" y1="54" x2="386" y2="336" stroke="#F7B04A" stroke-width="1" stroke-dasharray="5 5"/><text class="sm" x="386" y="356" font-size="10" letter-spacing="1.4" fill="#F7B04A" text-anchor="middle">AXE</text><line x1="274" y1="324" x2="306" y2="324" stroke="#75665E" stroke-width="1"/><text class="sm" x="290" y="338" font-size="9" letter-spacing="1.4" fill="#75665E" text-anchor="middle">2 PX</text><line x1="322" y1="324" x2="354" y2="324" stroke="#75665E" stroke-width="1"/><text class="sm" x="338" y="338" font-size="9" letter-spacing="1.4" fill="#75665E" text-anchor="middle">2 PX</text><line x1="418" y1="324" x2="450" y2="324" stroke="#75665E" stroke-width="1"/><text class="sm" x="434" y="338" font-size="9" letter-spacing="1.4" fill="#75665E" text-anchor="middle">2 PX</text><line x1="466" y1="324" x2="498" y2="324" stroke="#75665E" stroke-width="1"/><text class="sm" x="482" y="338" font-size="9" letter-spacing="1.4" fill="#75665E" text-anchor="middle">2 PX</text><line x1="202" y1="126" x2="210" y2="126" stroke="#4A3D36" stroke-width="1"/><text class="sm" x="196" y="132.4" font-size="10" letter-spacing="1.4" fill="#75665E" text-anchor="end">ERGOT FIXE</text><line x1="562" y1="126" x2="588" y2="126" stroke="#F7B04A" stroke-width="1"/><text class="sm" x="594" y="132.4" font-size="10" letter-spacing="1.4" fill="#F7B04A" text-anchor="start">ERGOT-BOUTON</text><line x1="562" y1="190" x2="588" y2="190" stroke="#4A3D36" stroke-width="1"/><text class="sm" x="594" y="196.4" font-size="10" letter-spacing="1.4" fill="#75665E" text-anchor="start">ÉCRAN</text><text class="sm" x="290" y="356" font-size="10" letter-spacing="1.4" fill="#75665E" text-anchor="middle">PATTES</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Ce que fait le bouton</h3>
+    <p class="kicker">
+      On appuie sur l’ergot droit — il s’enfonce d’un demi-millimètre, sans que rien ne
+      l’ait annoncé. Un appui court fait défiler quatre vues dans cet ordre, et l’objet
+      revient toujours à la première au bout d’une minute. Un appui long met les yeux en
+      veille. Quatre points empilés au bord droit de l’écran disent où l’on est — jamais
+      de menu, jamais de retour en arrière.
+    </p>
+    <div class="scroller">
+      <svg class="lineup-svg" viewBox="0 0 900 110" role="img" aria-label="Les quatre vues que fait défiler le bouton : session 5h à 34 %, semaine à 41 %, par modèle avec Opus 22 % et Sonnet 38 %, et crédits extra à 25 %.">
+        <rect x="24" y="10" width="180" height="45" fill="#0E0906"/><text class="px" x="39" y="42.25" font-size="22.5" fill="#F2E7DD" text-anchor="start">34%</text><text class="px" x="102" y="27.25" font-size="10.5" fill="#9A8778" text-anchor="start">SESSION 5H</text><text class="px" x="102" y="46" font-size="10.5" fill="#7A6A5E" text-anchor="start">RESET 3H48</text><rect class="eye" x="192" y="16.3" width="4.5" height="4.5" fill="#5FD79A"/><rect class="eye" x="192" y="24.7" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="192" y="33.1" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="192" y="41.5" width="4.5" height="4.5" fill="#33201A"/><text class="sm" x="114" y="79" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">1 / 4 · SESSION 5H</text><rect x="248" y="10" width="180" height="45" fill="#0E0906"/><text class="px" x="263" y="42.25" font-size="22.5" fill="#F2E7DD" text-anchor="start">41%</text><text class="px" x="326" y="27.25" font-size="10.5" fill="#9A8778" text-anchor="start">SEMAINE</text><text class="px" x="326" y="46" font-size="10.5" fill="#7A6A5E" text-anchor="start">LUN 09:00</text><rect class="eye" x="416" y="16.3" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="416" y="24.7" width="4.5" height="4.5" fill="#5FD79A"/><rect class="eye" x="416" y="33.1" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="416" y="41.5" width="4.5" height="4.5" fill="#33201A"/><text class="sm" x="338" y="79" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">2 / 4 · SEMAINE</text><rect x="472" y="10" width="180" height="45" fill="#0E0906"/><text class="px" x="487" y="42.25" font-size="22.5" fill="#F2E7DD" text-anchor="start">22%</text><text class="px" x="550" y="27.25" font-size="10.5" fill="#9A8778" text-anchor="start">OPUS</text><text class="px" x="550" y="46" font-size="10.5" fill="#7A6A5E" text-anchor="start">SONNET 38%</text><rect class="eye" x="640" y="16.3" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="640" y="24.7" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="640" y="33.1" width="4.5" height="4.5" fill="#F7B04A"/><rect class="eye" x="640" y="41.5" width="4.5" height="4.5" fill="#33201A"/><text class="sm" x="562" y="79" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">3 / 4 · PAR MODÈLE</text><rect x="696" y="10" width="180" height="45" fill="#0E0906"/><text class="px" x="711" y="42.25" font-size="22.5" fill="#F2E7DD" text-anchor="start">25%</text><text class="px" x="774" y="27.25" font-size="10.5" fill="#9A8778" text-anchor="start">EXTRA</text><text class="px" x="774" y="46" font-size="10.5" fill="#7A6A5E" text-anchor="start">12,40 EUR</text><rect class="eye" x="864" y="16.3" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="864" y="24.7" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="864" y="33.1" width="4.5" height="4.5" fill="#33201A"/><rect class="eye" x="864" y="41.5" width="4.5" height="4.5" fill="#F7B04A"/><text class="sm" x="786" y="79" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">4 / 4 · CRÉDITS EXTRA</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Le vocabulaire du regard</h3>
+    <p class="kicker">
+      Le regard étant gris, il ne lui reste que la forme — et c’est suffisant. Six états,
+      tous dans le même gris foncé, dont la veille obtenue par un appui long sur le
+      bouton. La couleur, elle, est réservée à l’écran, où elle veut dire quelque chose.
+    </p>
+    <div class="scroller">
+      <svg class="lineup-svg" viewBox="0 0 900 160" role="img" aria-label="Six visages du boîtier montrant les états du regard, tous en gris foncé : repos en chevrons, yeux pleins, bloqué en croix, veille en barres, reset en chevrons pointant vers le haut, et clin d’oeil.">
+        <rect x="14" y="14" width="117" height="13" fill="#EE9A79"/><rect x="131" y="14" width="13" height="13" fill="#B0512F"/><rect x="14" y="27" width="13" height="13" fill="#EE9A79"/><rect x="27" y="27" width="104" height="13" fill="#D97757"/><rect x="131" y="27" width="13" height="13" fill="#B0512F"/><rect x="14" y="40" width="13" height="13" fill="#EE9A79"/><rect x="27" y="40" width="104" height="13" fill="#D97757"/><rect x="131" y="40" width="13" height="13" fill="#B0512F"/><rect x="14" y="53" width="13" height="13" fill="#EE9A79"/><rect x="27" y="53" width="104" height="13" fill="#D97757"/><rect x="131" y="53" width="13" height="13" fill="#B0512F"/><rect x="14" y="66" width="13" height="13" fill="#EE9A79"/><rect x="27" y="66" width="104" height="13" fill="#D97757"/><rect x="131" y="66" width="13" height="13" fill="#B0512F"/><rect x="14" y="79" width="13" height="13" fill="#EE9A79"/><rect x="27" y="79" width="104" height="13" fill="#D97757"/><rect x="131" y="79" width="13" height="13" fill="#B0512F"/><rect x="14" y="92" width="13" height="13" fill="#EE9A79"/><rect x="27" y="92" width="104" height="13" fill="#D97757"/><rect x="131" y="92" width="13" height="13" fill="#B0512F"/><rect x="14" y="105" width="130" height="13" fill="#B0512F"/><polygon class="eye" points="29.6,33.5 68.6,60.8 29.6,88.1 29.6,77.96 54.1143,60.8 29.6,43.64" fill="#6E655E"/><polygon class="eye" points="115.4,33.5 76.4,60.8 115.4,88.1 115.4,77.96 90.8857,60.8 115.4,43.64" fill="#6E655E"/><text class="sm" x="79" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">REPOS</text><rect x="166" y="14" width="117" height="13" fill="#EE9A79"/><rect x="283" y="14" width="13" height="13" fill="#B0512F"/><rect x="166" y="27" width="13" height="13" fill="#EE9A79"/><rect x="179" y="27" width="104" height="13" fill="#D97757"/><rect x="283" y="27" width="13" height="13" fill="#B0512F"/><rect x="166" y="40" width="13" height="13" fill="#EE9A79"/><rect x="179" y="40" width="104" height="13" fill="#D97757"/><rect x="283" y="40" width="13" height="13" fill="#B0512F"/><rect x="166" y="53" width="13" height="13" fill="#EE9A79"/><rect x="179" y="53" width="104" height="13" fill="#D97757"/><rect x="283" y="53" width="13" height="13" fill="#B0512F"/><rect x="166" y="66" width="13" height="13" fill="#EE9A79"/><rect x="179" y="66" width="104" height="13" fill="#D97757"/><rect x="283" y="66" width="13" height="13" fill="#B0512F"/><rect x="166" y="79" width="13" height="13" fill="#EE9A79"/><rect x="179" y="79" width="104" height="13" fill="#D97757"/><rect x="283" y="79" width="13" height="13" fill="#B0512F"/><rect x="166" y="92" width="13" height="13" fill="#EE9A79"/><rect x="179" y="92" width="104" height="13" fill="#D97757"/><rect x="283" y="92" width="13" height="13" fill="#B0512F"/><rect x="166" y="105" width="130" height="13" fill="#B0512F"/><rect class="eye" x="190.05" y="45.85" width="22.1" height="29.9" fill="#6E655E"/><rect class="eye" x="236.85" y="45.85" width="22.1" height="29.9" fill="#6E655E"/><text class="sm" x="231" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">YEUX PLEINS</text><rect x="318" y="14" width="117" height="13" fill="#EE9A79"/><rect x="435" y="14" width="13" height="13" fill="#B0512F"/><rect x="318" y="27" width="13" height="13" fill="#EE9A79"/><rect x="331" y="27" width="104" height="13" fill="#D97757"/><rect x="435" y="27" width="13" height="13" fill="#B0512F"/><rect x="318" y="40" width="13" height="13" fill="#EE9A79"/><rect x="331" y="40" width="104" height="13" fill="#D97757"/><rect x="435" y="40" width="13" height="13" fill="#B0512F"/><rect x="318" y="53" width="13" height="13" fill="#EE9A79"/><rect x="331" y="53" width="104" height="13" fill="#D97757"/><rect x="435" y="53" width="13" height="13" fill="#B0512F"/><rect x="318" y="66" width="13" height="13" fill="#EE9A79"/><rect x="331" y="66" width="104" height="13" fill="#D97757"/><rect x="435" y="66" width="13" height="13" fill="#B0512F"/><rect x="318" y="79" width="13" height="13" fill="#EE9A79"/><rect x="331" y="79" width="104" height="13" fill="#D97757"/><rect x="435" y="79" width="13" height="13" fill="#B0512F"/><rect x="318" y="92" width="13" height="13" fill="#EE9A79"/><rect x="331" y="92" width="104" height="13" fill="#D97757"/><rect x="435" y="92" width="13" height="13" fill="#B0512F"/><rect x="318" y="105" width="130" height="13" fill="#B0512F"/><rect class="eye" x="335.55" y="55.6" width="35.1" height="10.4" fill="#6E655E" transform="rotate(45 353.1 60.8)"/><rect class="eye" x="335.55" y="55.6" width="35.1" height="10.4" fill="#6E655E" transform="rotate(-45 353.1 60.8)"/><rect class="eye" x="382.35" y="55.6" width="35.1" height="10.4" fill="#6E655E" transform="rotate(45 399.9 60.8)"/><rect class="eye" x="382.35" y="55.6" width="35.1" height="10.4" fill="#6E655E" transform="rotate(-45 399.9 60.8)"/><text class="sm" x="383" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">BLOQUÉ</text><rect x="470" y="14" width="117" height="13" fill="#EE9A79"/><rect x="587" y="14" width="13" height="13" fill="#B0512F"/><rect x="470" y="27" width="13" height="13" fill="#EE9A79"/><rect x="483" y="27" width="104" height="13" fill="#D97757"/><rect x="587" y="27" width="13" height="13" fill="#B0512F"/><rect x="470" y="40" width="13" height="13" fill="#EE9A79"/><rect x="483" y="40" width="104" height="13" fill="#D97757"/><rect x="587" y="40" width="13" height="13" fill="#B0512F"/><rect x="470" y="53" width="13" height="13" fill="#EE9A79"/><rect x="483" y="53" width="104" height="13" fill="#D97757"/><rect x="587" y="53" width="13" height="13" fill="#B0512F"/><rect x="470" y="66" width="13" height="13" fill="#EE9A79"/><rect x="483" y="66" width="104" height="13" fill="#D97757"/><rect x="587" y="66" width="13" height="13" fill="#B0512F"/><rect x="470" y="79" width="13" height="13" fill="#EE9A79"/><rect x="483" y="79" width="104" height="13" fill="#D97757"/><rect x="587" y="79" width="13" height="13" fill="#B0512F"/><rect x="470" y="92" width="13" height="13" fill="#EE9A79"/><rect x="483" y="92" width="104" height="13" fill="#D97757"/><rect x="587" y="92" width="13" height="13" fill="#B0512F"/><rect x="470" y="105" width="130" height="13" fill="#B0512F"/><rect class="eye" x="487.55" y="55.925" width="35.1" height="9.75" fill="#6E655E"/><rect class="eye" x="534.35" y="55.925" width="35.1" height="9.75" fill="#6E655E"/><text class="sm" x="535" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">VEILLE</text><rect x="622" y="14" width="117" height="13" fill="#EE9A79"/><rect x="739" y="14" width="13" height="13" fill="#B0512F"/><rect x="622" y="27" width="13" height="13" fill="#EE9A79"/><rect x="635" y="27" width="104" height="13" fill="#D97757"/><rect x="739" y="27" width="13" height="13" fill="#B0512F"/><rect x="622" y="40" width="13" height="13" fill="#EE9A79"/><rect x="635" y="40" width="104" height="13" fill="#D97757"/><rect x="739" y="40" width="13" height="13" fill="#B0512F"/><rect x="622" y="53" width="13" height="13" fill="#EE9A79"/><rect x="635" y="53" width="104" height="13" fill="#D97757"/><rect x="739" y="53" width="13" height="13" fill="#B0512F"/><rect x="622" y="66" width="13" height="13" fill="#EE9A79"/><rect x="635" y="66" width="104" height="13" fill="#D97757"/><rect x="739" y="66" width="13" height="13" fill="#B0512F"/><rect x="622" y="79" width="13" height="13" fill="#EE9A79"/><rect x="635" y="79" width="104" height="13" fill="#D97757"/><rect x="739" y="79" width="13" height="13" fill="#B0512F"/><rect x="622" y="92" width="13" height="13" fill="#EE9A79"/><rect x="635" y="92" width="104" height="13" fill="#D97757"/><rect x="739" y="92" width="13" height="13" fill="#B0512F"/><rect x="622" y="105" width="130" height="13" fill="#B0512F"/><polygon class="eye" points="637.6,74.45 657.1,47.15 676.6,74.45 670.313,74.45 657.1,55.9515 643.887,74.45" fill="#6E655E"/><polygon class="eye" points="684.4,74.45 703.9,47.15 723.4,74.45 717.113,74.45 703.9,55.9515 690.687,74.45" fill="#6E655E"/><text class="sm" x="687" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">RESET</text><rect x="774" y="14" width="117" height="13" fill="#EE9A79"/><rect x="891" y="14" width="13" height="13" fill="#B0512F"/><rect x="774" y="27" width="13" height="13" fill="#EE9A79"/><rect x="787" y="27" width="104" height="13" fill="#D97757"/><rect x="891" y="27" width="13" height="13" fill="#B0512F"/><rect x="774" y="40" width="13" height="13" fill="#EE9A79"/><rect x="787" y="40" width="104" height="13" fill="#D97757"/><rect x="891" y="40" width="13" height="13" fill="#B0512F"/><rect x="774" y="53" width="13" height="13" fill="#EE9A79"/><rect x="787" y="53" width="104" height="13" fill="#D97757"/><rect x="891" y="53" width="13" height="13" fill="#B0512F"/><rect x="774" y="66" width="13" height="13" fill="#EE9A79"/><rect x="787" y="66" width="104" height="13" fill="#D97757"/><rect x="891" y="66" width="13" height="13" fill="#B0512F"/><rect x="774" y="79" width="13" height="13" fill="#EE9A79"/><rect x="787" y="79" width="104" height="13" fill="#D97757"/><rect x="891" y="79" width="13" height="13" fill="#B0512F"/><rect x="774" y="92" width="13" height="13" fill="#EE9A79"/><rect x="787" y="92" width="104" height="13" fill="#D97757"/><rect x="891" y="92" width="13" height="13" fill="#B0512F"/><rect x="774" y="105" width="130" height="13" fill="#B0512F"/><rect class="eye" x="791.55" y="55.925" width="35.1" height="9.75" fill="#6E655E"/><polygon class="eye" points="875.4,33.5 836.4,60.8 875.4,88.1 875.4,77.96 850.886,60.8 875.4,43.64" fill="#6E655E"/><text class="sm" x="839" y="140" font-size="10" letter-spacing="1.3" fill="#75665E" text-anchor="middle">CLIN D’ŒIL</text>
+      </svg>
+    </div>
+  </section>
+
+  <section class="section">
+    <h3>Ce qui reste à voir</h3>
+    <p class="kicker">
+      Trois choses ne se jugent pas à l’écran. Une maquette blanche imprimée, sans
+      électronique, les tranche en une semaine sur un vrai bureau.
+    </p>
+
+    <div class="verdict">
+      <article>
+        <h4>La taille réelle</h4>
+        <p>
+          97 mm de large et 66 de haut, c’est <b>la paume</b>. Sur un plan c’est abstrait&nbsp;; posé à
+          côté d’un clavier, ça se voit tout de suite — trop petit, l’écran devient
+          illisible&nbsp;; trop gros, l’objet encombre.
+        </p>
+      </article>
+      <article>
+        <h4>Le bouton caché</h4>
+        <p>
+          Deux ergots identiques, un seul s’enfonce. <b>Est-ce qu’on le trouve</b> sans
+          qu’on vous le dise&nbsp;? Et est-ce qu’on n’a pas envie d’appuyer aussi sur
+          l’autre&nbsp;?
+        </p>
+      </article>
+      <article>
+        <h4>Les yeux gris</h4>
+        <p>
+          Ils ne disent plus rien, par choix. Reste à voir si le visage tient encore
+          debout <b>quand le regard est éteint</b> — écran noir, pièce sombre, objet au
+          repos.
+        </p>
+      </article>
+    </div>
+
+    <div class="closing">
+      <p>
+        La symétrie est tenue de bout en bout&nbsp;: quatre pattes en miroir, deux ergots
+        jumeaux, un axe qui tombe pile au milieu de l’écran. Le seul écart de tout l’objet
+        est un jeu de fonctionnement de quelques dixièmes de millimètre, et il ne se voit
+        que sur le plan.
+      </p>
+      <p>
+        Un point à trancher avant d’engager le moindre outillage&nbsp;: plus la
+        ressemblance au sprite est fidèle, plus il faudra une licence pour vendre. Ça ne
+        change rien à la maquette — ça change tout à la suite.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="mono">iBurned · Écran ventre · Planche 03</span>
+    <span class="mono">Volumes indicatifs — rien n’est coté</span>
+  </footer>
+
+</div>
