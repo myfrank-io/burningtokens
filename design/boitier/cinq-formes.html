@@ -1,0 +1,931 @@
+<title>Cinq mascottes, une jauge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&family=Newsreader:opsz,wght@6..72,300..600&display=swap">
+<style>
+  :root{
+    color-scheme: dark;
+    --ground:#141110;
+    --sheet:#1B1614;
+    --rule:#3A2F29;
+    --rule-soft:#291F1B;
+    --ink:#F3EAE2;
+    --ink-2:#AC9C91;
+    --ink-3:#75665E;
+    --ember:#FF7A3D;
+    --clay:#D97757;
+    --ok:#57C98A;
+    --warn:#F5A93B;
+    --crit:#FF5A63;
+  }
+
+  body{
+    background:var(--ground);
+    color:var(--ink);
+    font-family:"Newsreader", Georgia, "Times New Roman", serif;
+    font-size:17px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .board{
+    max-width:1140px;
+    margin-inline:auto;
+    padding-inline:clamp(18px, 4vw, 52px);
+    padding-block:clamp(40px, 7vw, 88px) 72px;
+  }
+
+  .mono{
+    font-family:"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric:tabular-nums;
+    text-transform:uppercase;
+    letter-spacing:.13em;
+    font-size:11px;
+    font-weight:500;
+    color:var(--ink-3);
+  }
+
+  /* ---------- title block ---------- */
+  .titleblock{ border-top:2px solid var(--clay); padding-top:22px; }
+  .titleblock .eyebrow{
+    display:flex; flex-wrap:wrap; gap:10px 20px;
+    margin-bottom:clamp(22px,4vw,38px);
+  }
+  .titleblock .eyebrow span:first-child{ color:var(--clay); }
+  h1{
+    font-family:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-variation-settings:"wdth" 112;
+    font-weight:800;
+    text-transform:uppercase;
+    font-size:clamp(2.4rem, 8vw, 5.2rem);
+    line-height:.9;
+    letter-spacing:-.025em;
+    margin:0;
+    text-wrap:balance;
+  }
+  h1 em{ font-style:normal; color:var(--clay); }
+  .lede{
+    max-width:60ch;
+    margin:26px 0 0;
+    font-size:clamp(1.05rem,2.1vw,1.28rem);
+    line-height:1.55;
+    color:var(--ink-2);
+  }
+  .lede strong{ color:var(--ink); font-weight:500; }
+
+  .meta{
+    margin-top:clamp(28px,5vw,44px);
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    border-top:1px solid var(--rule);
+    border-bottom:1px solid var(--rule);
+  }
+  .meta div{ padding:14px 18px 15px 0; border-right:1px solid var(--rule-soft); }
+  .meta div:last-child{ border-right:0; }
+  .meta dt{ font-size:10px; letter-spacing:.16em; color:var(--ink-3); }
+  .meta dd{
+    margin:6px 0 0;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px;
+    letter-spacing:.02em;
+    color:var(--ink);
+    text-transform:uppercase;
+  }
+
+  .legend{ margin-top:34px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 26px; }
+  .legend b{ display:inline-flex; align-items:center; gap:8px; font-weight:500; }
+  .legend i{ width:9px; height:9px; border-radius:2px; display:inline-block; font-style:normal; }
+
+  /* ---------- directions ---------- */
+  .directions{ list-style:none; margin:0; padding:0; }
+  .dir{
+    display:grid;
+    grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
+    gap:clamp(24px,3.6vw,46px);
+    align-items:start;
+    padding-block:clamp(44px,6vw,66px);
+    border-top:1px solid var(--rule);
+  }
+  .dir:first-child{ border-top:0; padding-top:clamp(34px,5vw,52px); }
+
+  .stage{
+    position:relative;
+    border-radius:12px;
+    border:1px solid var(--rule-soft);
+    background:radial-gradient(118% 88% at 50% 16%, #2C231E 0%, #16110F 54%, #0B0908 100%);
+    overflow:hidden;
+  }
+  .stage::after{
+    content:"";
+    position:absolute; left:0; right:0; top:87%; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(255,214,184,.10) 22%, rgba(255,214,184,.10) 78%, transparent);
+    pointer-events:none;
+  }
+  .render{ display:block; width:100%; height:auto; }
+  .caption{
+    position:relative; z-index:1;
+    display:flex; flex-wrap:wrap; gap:6px 18px; justify-content:space-between;
+    padding:11px 14px;
+    border-top:1px solid var(--rule-soft);
+    background:rgba(9,7,6,.55);
+  }
+  .caption span{ font-size:10px; }
+  .caption .state{ color:var(--ink-2); }
+
+  .idx{
+    font-family:"Archivo", Arial, sans-serif;
+    font-variation-settings:"wdth" 88;
+    font-weight:800;
+    font-size:clamp(2.6rem,6vw,3.6rem);
+    line-height:.8;
+    color:var(--rule);
+    display:block;
+    margin-bottom:10px;
+  }
+  .dir h2{
+    margin:0;
+    font-family:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    font-variation-settings:"wdth" 110;
+    font-weight:700;
+    text-transform:uppercase;
+    font-size:clamp(1.45rem,3vw,1.95rem);
+    line-height:1.02;
+    letter-spacing:-.01em;
+  }
+  .dir h2 small{
+    display:block; margin-top:9px;
+    font-family:"IBM Plex Mono", monospace;
+    font-weight:500; font-size:11px; letter-spacing:.14em;
+    color:var(--clay); text-transform:uppercase;
+  }
+  .dir p{ margin:18px 0 0; max-width:46ch; color:var(--ink-2); }
+  .dir p strong{ color:var(--ink); font-weight:500; }
+
+  .spec{ margin:24px 0 0; }
+  .spec > div{
+    display:grid;
+    grid-template-columns:96px minmax(0,1fr);
+    gap:8px 16px;
+    padding:8px 0;
+    border-top:1px solid var(--rule-soft);
+  }
+  .spec dt{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ink-3); padding-top:2px;
+  }
+  .spec dd{
+    margin:0;
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:12.5px; line-height:1.5; letter-spacing:.005em;
+    color:var(--ink-2);
+  }
+  .spec dd b{ color:var(--ink); font-weight:500; }
+  .spec .risk dt{ color:var(--clay); }
+
+  /* ---------- sections ---------- */
+  .section{ padding-block:clamp(46px,6vw,70px); border-top:1px solid var(--rule); }
+  .section h3{
+    margin:0 0 6px;
+    font-family:"Archivo", Arial, sans-serif;
+    font-variation-settings:"wdth" 112;
+    font-weight:800; text-transform:uppercase;
+    font-size:clamp(1.25rem,2.6vw,1.6rem);
+    letter-spacing:-.008em;
+  }
+  .section .kicker{ margin:0 0 26px; max-width:56ch; color:var(--ink-2); }
+
+  .scroller{
+    overflow-x:auto;
+    border:1px solid var(--rule-soft);
+    border-radius:12px;
+    background:linear-gradient(180deg,#191412,#110D0C);
+    padding:18px 16px 14px;
+  }
+  .scroller svg{ display:block; height:auto; }
+  .map-svg{ width:100%; min-width:560px; }
+  .lineup-svg{ width:100%; min-width:780px; }
+
+  .verdict{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(238px,1fr));
+    gap:2px;
+    background:var(--rule-soft);
+    border:1px solid var(--rule-soft);
+    border-radius:12px;
+    overflow:hidden;
+    margin-top:8px;
+  }
+  .verdict article{ background:var(--sheet); padding:22px 20px 24px; }
+  .verdict h4{
+    margin:0 0 10px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:10.5px; letter-spacing:.15em; text-transform:uppercase;
+    font-weight:600; color:var(--clay);
+  }
+  .verdict p{ margin:0; font-size:15.5px; line-height:1.56; color:var(--ink-2); }
+  .verdict p b{ color:var(--ink); font-weight:500; }
+
+  .closing{
+    margin-top:34px;
+    padding:26px 26px 28px;
+    border-left:2px solid var(--clay);
+    background:linear-gradient(90deg, rgba(217,119,87,.09), transparent 70%);
+  }
+  .closing p{ margin:0; max-width:62ch; font-size:1.06rem; color:var(--ink); }
+  .closing p + p{ margin-top:14px; color:var(--ink-2); }
+
+  footer{
+    margin-top:64px; padding-top:20px;
+    border-top:1px solid var(--rule);
+    display:flex; flex-wrap:wrap; gap:8px 24px; justify-content:space-between;
+  }
+
+  .sm{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums; font-weight:500;
+  }
+  .sb{
+    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric:tabular-nums; font-weight:600;
+  }
+
+  @keyframes ember{
+    0%,100%{ opacity:1 }
+    38%{ opacity:.85 }
+    56%{ opacity:.97 }
+    77%{ opacity:.89 }
+  }
+  .flick{ animation:ember 3.8s ease-in-out infinite; transform-origin:center; }
+  @media (prefers-reduced-motion: reduce){ .flick{ animation:none; } }
+
+  @media (max-width: 880px){
+    .dir{ grid-template-columns:minmax(0,1fr); gap:26px; }
+    .meta div{ border-right:0; border-bottom:1px solid var(--rule-soft); }
+  }
+</style>
+
+<div class="board">
+
+  <header class="titleblock">
+    <div class="eyebrow mono">
+      <span>iBurned</span>
+      <span>Objet compagnon</span>
+      <span>Recherche de forme</span>
+    </div>
+    <h1>Cinq mascottes,<br><em>une</em> jauge</h1>
+    <p class="lede">
+      La même bestiole orange, cinq fois. Ce qui change n'est pas le personnage —
+      c'est <strong>ce qu'il devient une fois posé</strong> sur un bureau&nbsp;: figurine,
+      petit écran, caillou, lanterne, ou paire d'yeux qui vous surveille.
+      Rien ici ne présuppose l'électronique qu'il y a dedans.
+    </p>
+
+    <dl class="meta">
+      <div><dt class="mono">Planche</dt><dd>01 / 01</dd></div>
+      <div><dt class="mono">Nature</dt><dd>Recherche de forme</dd></div>
+      <div><dt class="mono">Date</dt><dd>10.09.2026</dd></div>
+      <div><dt class="mono">Échelle</dt><dd>≈ 1:2</dd></div>
+      <div><dt class="mono">Étape suivante</dt><dd>Maquette blanche</dd></div>
+    </dl>
+
+    <p class="legend mono">
+      <span>Code couleur des yeux</span>
+      <b><i style="background:var(--ok)"></i>&lt; 60 % — on respire</b>
+      <b><i style="background:var(--warn)"></i>60 → 85 % — on lève la tête</b>
+      <b><i style="background:var(--crit)"></i>&gt; 85 % — on ralentit</b>
+    </p>
+  </header>
+
+  <ol class="directions">
+
+    <!-- ============ 01 LE PORTRAIT ============ -->
+    <li class="dir">
+      <figure class="stage">
+        <svg class="render" viewBox="56 26 308 248" role="img" aria-label="Mascotte orange debout, deux oreilles droites, yeux carrés lumineux verts, écran dans le ventre, deux petites pattes.">
+          <defs>
+            <linearGradient id="a-clay" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#F2A47C"/>
+              <stop offset=".46" stop-color="#D97757"/>
+              <stop offset="1" stop-color="#9E4327"/>
+            </linearGradient>
+            <linearGradient id="a-clay2" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#D8825F"/>
+              <stop offset="1" stop-color="#8F3A21"/>
+            </linearGradient>
+            <radialGradient id="a-hl" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FFE0CB" stop-opacity=".40"/>
+              <stop offset="1" stop-color="#FFE0CB" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="a-glass" x1=".2" y1="0" x2=".55" y2="1">
+              <stop offset="0" stop-color="#1D1613"/>
+              <stop offset="1" stop-color="#090706"/>
+            </linearGradient>
+            <radialGradient id="a-eye" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#57C98A" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#57C98A" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="a-sh" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#000000" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="210" cy="256" rx="126" ry="15" fill="url(#a-sh)"/>
+
+          <rect x="150" y="52" width="30" height="62" rx="13" fill="url(#a-clay2)" transform="rotate(-7 165 83)"/>
+          <rect x="240" y="52" width="30" height="62" rx="13" fill="url(#a-clay2)" transform="rotate(7 255 83)"/>
+          <rect x="104" y="150" width="22" height="54" rx="11" fill="url(#a-clay2)"/>
+          <rect x="294" y="150" width="22" height="54" rx="11" fill="url(#a-clay2)"/>
+          <rect x="150" y="224" width="46" height="28" rx="13" fill="#A34A2C"/>
+          <rect x="224" y="224" width="46" height="28" rx="13" fill="#A34A2C"/>
+
+          <rect x="118" y="98" width="184" height="148" rx="44" fill="url(#a-clay)"/>
+          <ellipse cx="168" cy="132" rx="62" ry="34" fill="url(#a-hl)"/>
+
+          <ellipse cx="165" cy="139" rx="30" ry="26" fill="url(#a-eye)"/>
+          <ellipse cx="255" cy="139" rx="30" ry="26" fill="url(#a-eye)"/>
+          <rect x="152" y="126" width="26" height="26" rx="7" fill="#38190F"/>
+          <rect x="242" y="126" width="26" height="26" rx="7" fill="#38190F"/>
+          <rect x="157" y="131" width="16" height="16" rx="4" fill="#7BE0AB"/>
+          <rect x="247" y="131" width="16" height="16" rx="4" fill="#7BE0AB"/>
+
+          <rect x="146" y="168" width="128" height="58" rx="10" fill="url(#a-glass)"/>
+          <rect x="146.7" y="168.7" width="126.6" height="56.6" rx="9.4" fill="none" stroke="#000000" stroke-opacity=".5"/>
+          <rect x="151" y="171.5" width="118" height="1.6" rx=".8" fill="#FFFFFF" fill-opacity=".07"/>
+          <text class="sm" x="160" y="187" font-size="8" letter-spacing="1.6" fill="#7C6E64">SESSION 5H</text>
+          <text class="sb" x="160" y="214" font-size="24" fill="#F1E8DF">34%</text>
+          <rect x="222" y="195" width="42" height="6" rx="3" fill="#2C2421"/>
+          <rect x="222" y="195" width="14" height="6" rx="3" fill="#57C98A"/>
+          <text class="sm" x="222" y="216" font-size="8" letter-spacing=".9" fill="#7C6E64">3H 48</text>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · h. 96 mm</span>
+          <span class="state">Yeux — 34 % · vert</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <span class="idx">01</span>
+        <h2>Le portrait<small>La mascotte, telle quelle</small></h2>
+        <p>
+          Les proportions du dessin, respectées à la lettre&nbsp;: corps carré aux angles très
+          adoucis, oreilles droites légèrement écartées, deux petites pattes qui dépassent,
+          des moignons de bras sur les côtés. <strong>Les yeux carrés sont les diodes d'état</strong>
+          et le ventre est l'écran.
+        </p>
+        <p>
+          C'est la version qu'on reconnaît de dos, à trois mètres, sur une photo floue. C'est
+          aussi celle qui ressemble le plus à une figurine — donc celle qu'on offre.
+        </p>
+        <dl class="spec">
+          <div><dt>Caractère</dt><dd>Fidèle · attachant · photogénique</dd></div>
+          <div><dt>Couleur</dt><dd><b>Terracotta</b> #D97757 · pattes et oreilles plus sombres</dd></div>
+          <div><dt>Matière</dt><dd>Coque opaque, yeux en fenêtre translucide</dd></div>
+          <div><dt>Finition</dt><dd>Soft-touch mat · yeux polis brillants</dd></div>
+          <div><dt>Lumière</dt><dd>Les deux yeux, rien d'autre</dd></div>
+          <div><dt>Gabarit</dt><dd>78 × 96 × 62 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>Plus on est fidèle, plus il faudra une licence avant de vendre</dd></div>
+        </dl>
+      </div>
+    </li>
+
+    <!-- ============ 02 LE TRAPU ============ -->
+    <li class="dir">
+      <figure class="stage">
+        <svg class="render" viewBox="56 26 308 248" role="img" aria-label="Mascotte orange écrasée et large, oreilles courtes, petits yeux ambrés en haut, grand écran panoramique occupant tout le ventre.">
+          <defs>
+            <linearGradient id="b-clay" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#FFA672"/>
+              <stop offset=".46" stop-color="#E8763C"/>
+              <stop offset="1" stop-color="#A5401A"/>
+            </linearGradient>
+            <linearGradient id="b-clay2" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#E8834B"/>
+              <stop offset="1" stop-color="#963714"/>
+            </linearGradient>
+            <radialGradient id="b-hl" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FFE3C9" stop-opacity=".40"/>
+              <stop offset="1" stop-color="#FFE3C9" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="b-glass" x1=".2" y1="0" x2=".55" y2="1">
+              <stop offset="0" stop-color="#1D1613"/>
+              <stop offset="1" stop-color="#090706"/>
+            </linearGradient>
+            <radialGradient id="b-eye" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#F5A93B" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#F5A93B" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="b-sh" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#000000" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="210" cy="254" rx="140" ry="14" fill="url(#b-sh)"/>
+
+          <rect x="142" y="86" width="34" height="46" rx="16" fill="url(#b-clay2)" transform="rotate(-9 159 109)"/>
+          <rect x="244" y="86" width="34" height="46" rx="16" fill="url(#b-clay2)" transform="rotate(9 261 109)"/>
+
+          <rect x="94" y="116" width="232" height="128" rx="44" fill="url(#b-clay)"/>
+          <ellipse cx="152" cy="146" rx="66" ry="28" fill="url(#b-hl)"/>
+          <rect x="122" y="240" width="176" height="8" rx="4" fill="#7E2F11"/>
+
+          <ellipse cx="142" cy="148" rx="24" ry="21" fill="url(#b-eye)"/>
+          <ellipse cx="278" cy="148" rx="24" ry="21" fill="url(#b-eye)"/>
+          <rect x="132" y="138" width="20" height="20" rx="6" fill="#3A1A0C"/>
+          <rect x="268" y="138" width="20" height="20" rx="6" fill="#3A1A0C"/>
+          <rect x="136" y="142" width="12" height="12" rx="3" fill="#FFC46B"/>
+          <rect x="272" y="142" width="12" height="12" rx="3" fill="#FFC46B"/>
+
+          <rect x="128" y="168" width="164" height="62" rx="10" fill="url(#b-glass)"/>
+          <rect x="128.7" y="168.7" width="162.6" height="60.6" rx="9.4" fill="none" stroke="#000000" stroke-opacity=".5"/>
+          <rect x="133" y="171.5" width="154" height="1.6" rx=".8" fill="#FFFFFF" fill-opacity=".07"/>
+          <text class="sm" x="143" y="187" font-size="8" letter-spacing="1.6" fill="#7C6E64">SESSION 5H</text>
+          <text class="sb" x="143" y="216" font-size="27" fill="#F1E8DF">68%</text>
+          <rect x="216" y="182" width="62" height="7" rx="3.5" fill="#2C2421"/>
+          <rect x="216" y="182" width="42" height="7" rx="3.5" fill="#F5A93B"/>
+          <text class="sm" x="216" y="205" font-size="8" letter-spacing=".9" fill="#8B7C71">RESET 1H 07</text>
+          <text class="sm" x="216" y="219" font-size="8" letter-spacing=".9" fill="#6B5E56">SEMAINE 41%</text>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · h. 72 mm</span>
+          <span class="state">Yeux — 68 % · ambre</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <span class="idx">02</span>
+        <h2>Le trapu<small>La mascotte écrasée</small></h2>
+        <p>
+          On écrase la bestiole&nbsp;: elle s'assoit à même le bureau, les oreilles rentrent
+          dans les épaules, et le ventre s'élargit jusqu'à devenir un vrai petit écran
+          panoramique. Les yeux, minuscules, sont poussés aux extrémités —
+          <strong>la moitié inférieure du visage est de l'information</strong>.
+        </p>
+        <p>
+          C'est la version qui reste drôle tout en étant réellement utile&nbsp;: on y lit la
+          session, le reset et la semaine sans changer d'écran.
+        </p>
+        <dl class="spec">
+          <div><dt>Caractère</dt><dd>Rondouillard · utile · le plus lisible</dd></div>
+          <div><dt>Couleur</dt><dd><b>Orange vif</b> #E8763C, plus saturé que le dessin</dd></div>
+          <div><dt>Matière</dt><dd>Coque opaque + bande écran pleine largeur</dd></div>
+          <div><dt>Finition</dt><dd>Soft-touch · bandeau écran noir piano</dd></div>
+          <div><dt>Lumière</dt><dd>Yeux discrets, l'écran fait le travail</dd></div>
+          <div><dt>Gabarit</dt><dd>104 × 72 × 58 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>Un peu moins «&nbsp;créature&nbsp;», un peu plus «&nbsp;appareil&nbsp;»</dd></div>
+        </dl>
+      </div>
+    </li>
+
+    <!-- ============ 03 LE GALET ============ -->
+    <li class="dir">
+      <figure class="stage">
+        <svg class="render" viewBox="56 26 308 248" role="img" aria-label="Mascotte fondue en galet : masse arrondie orange grisé avec deux bosses douces à la place des oreilles, yeux carrés discrets, petit écran encastré.">
+          <defs>
+            <radialGradient id="c-hl" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FFE2CC" stop-opacity=".42"/>
+              <stop offset="1" stop-color="#FFE2CC" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="c-shade" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#5E2814" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#5E2814" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="c-glass" x1=".2" y1="0" x2=".55" y2="1">
+              <stop offset="0" stop-color="#1D1613"/>
+              <stop offset="1" stop-color="#090706"/>
+            </linearGradient>
+            <radialGradient id="c-eye" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#57C98A" stop-opacity=".42"/>
+              <stop offset="1" stop-color="#57C98A" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="c-sh" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#000000" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="210" cy="250" rx="140" ry="15" fill="url(#c-sh)"/>
+
+          <g fill="#C97A55">
+            <path d="M84 240c-18 0-22-42-10-74 12-32 50-48 136-48s124 16 136 48c12 32 8 74-10 74Z"/>
+            <ellipse cx="156" cy="128" rx="44" ry="26"/>
+            <ellipse cx="266" cy="126" rx="42" ry="25"/>
+          </g>
+          <ellipse cx="162" cy="140" rx="76" ry="42" fill="url(#c-hl)"/>
+          <ellipse cx="286" cy="226" rx="86" ry="34" fill="url(#c-shade)"/>
+          <ellipse cx="210" cy="240" rx="152" ry="16" fill="#0B0908" fill-opacity=".55"/>
+
+          <ellipse cx="166" cy="158" rx="26" ry="22" fill="url(#c-eye)"/>
+          <ellipse cx="254" cy="158" rx="26" ry="22" fill="url(#c-eye)"/>
+          <rect x="155" y="147" width="22" height="22" rx="6" fill="#3B1D11"/>
+          <rect x="243" y="147" width="22" height="22" rx="6" fill="#3B1D11"/>
+          <rect x="159" y="151" width="13" height="13" rx="3" fill="#7BE0AB"/>
+          <rect x="247" y="151" width="13" height="13" rx="3" fill="#7BE0AB"/>
+
+          <rect x="146" y="182" width="128" height="50" rx="9" fill="url(#c-glass)"/>
+          <rect x="146.7" y="182.7" width="126.6" height="48.6" rx="8.4" fill="none" stroke="#000000" stroke-opacity=".5"/>
+          <text class="sm" x="158" y="199" font-size="8" letter-spacing="1.6" fill="#7C6E64">SESSION 5H</text>
+          <text class="sb" x="158" y="223" font-size="21" fill="#F1E8DF">52%</text>
+          <rect x="218" y="206" width="44" height="6" rx="3" fill="#2C2421"/>
+          <rect x="218" y="206" width="23" height="6" rx="3" fill="#57C98A"/>
+          <text class="sm" x="218" y="225" font-size="8" letter-spacing=".9" fill="#7C6E64">2H 31</text>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · h. 64 mm</span>
+          <span class="state">Yeux — 52 % · vert</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <span class="idx">03</span>
+        <h2>Le galet<small>La mascotte fondue</small></h2>
+        <p>
+          La même bestiole, mais passée sous l'eau pendant mille ans&nbsp;: les oreilles ne sont
+          plus que <strong>deux bosses douces</strong>, les pattes ont disparu, tout est devenu une
+          seule masse continue. Il ne reste que les deux yeux carrés — le minimum pour qu'on
+          la reconnaisse encore.
+        </p>
+        <p>
+          C'est la version pour le bureau d'à côté, celui où l'on n'assume pas une figurine.
+          Elle passe pour un objet de déco tant qu'on ne s'approche pas.
+        </p>
+        <dl class="spec">
+          <div><dt>Caractère</dt><dd>Sobre · adulte · presque du mobilier</dd></div>
+          <div><dt>Couleur</dt><dd><b>Argile grisée</b> #C97A55, orange rabattu</dd></div>
+          <div><dt>Matière</dt><dd>Masse pleine teintée, sans raccord visible</dd></div>
+          <div><dt>Finition</dt><dd>Microbillage mat, texture minérale</dd></div>
+          <div><dt>Lumière</dt><dd>Yeux seuls, très encastrés</dd></div>
+          <div><dt>Gabarit</dt><dd>96 × 64 × 58 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>À force d'arrondir, on perd ce qui la rendait attachante</dd></div>
+        </dl>
+      </div>
+    </li>
+
+    <!-- ============ 04 LA LANTERNE ============ -->
+    <li class="dir">
+      <figure class="stage">
+        <svg class="render" viewBox="56 26 308 248" role="img" aria-label="Mascotte moulée dans un orange translucide, le corps entier éclairé de l'intérieur en rouge, carte électronique visible en transparence, écran net sur le ventre.">
+          <defs>
+            <linearGradient id="d-shell" x1=".15" y1="0" x2=".9" y2="1">
+              <stop offset="0" stop-color="#FFA871" stop-opacity=".62"/>
+              <stop offset=".5" stop-color="#DE7038" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#8F3A18" stop-opacity=".7"/>
+            </linearGradient>
+            <linearGradient id="d-shell2" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#F09A63" stop-opacity=".6"/>
+              <stop offset="1" stop-color="#8A3616" stop-opacity=".68"/>
+            </linearGradient>
+            <radialGradient id="d-core" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FF5A63" stop-opacity=".85"/>
+              <stop offset=".55" stop-color="#FF7A3D" stop-opacity=".38"/>
+              <stop offset="1" stop-color="#FF7A3D" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="d-halo" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FF6A45" stop-opacity=".34"/>
+              <stop offset="1" stop-color="#FF6A45" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="d-glass" x1=".2" y1="0" x2=".55" y2="1">
+              <stop offset="0" stop-color="#170F0C"/>
+              <stop offset="1" stop-color="#070504"/>
+            </linearGradient>
+            <radialGradient id="d-sh" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#000000" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="210" cy="258" rx="132" ry="15" fill="url(#d-sh)"/>
+          <ellipse class="flick" cx="210" cy="168" rx="150" ry="132" fill="url(#d-halo)"/>
+
+          <rect x="148" y="46" width="32" height="64" rx="14" fill="url(#d-shell2)" transform="rotate(-7 164 78)"/>
+          <rect x="240" y="46" width="32" height="64" rx="14" fill="url(#d-shell2)" transform="rotate(7 256 78)"/>
+          <rect x="148" y="228" width="48" height="28" rx="13" fill="#8E3717" fill-opacity=".85"/>
+          <rect x="224" y="228" width="48" height="28" rx="13" fill="#8E3717" fill-opacity=".85"/>
+
+          <g opacity=".5">
+            <rect x="146" y="120" width="128" height="112" rx="4" fill="#1F4033"/>
+            <rect x="154" y="206" width="34" height="13" rx="2" fill="#0C0B0A"/>
+            <rect x="196" y="206" width="20" height="13" rx="2" fill="#0C0B0A"/>
+            <rect x="226" y="204" width="30" height="17" rx="2" fill="#0C0B0A"/>
+            <circle cx="160" cy="128" r="4.5" fill="#6A625C"/>
+            <circle cx="260" cy="128" r="4.5" fill="#6A625C"/>
+            <circle cx="160" cy="224" r="4.5" fill="#6A625C"/>
+            <circle cx="260" cy="224" r="4.5" fill="#6A625C"/>
+            <rect x="196" y="230" width="30" height="10" rx="5" fill="#0A0908"/>
+          </g>
+          <ellipse class="flick" cx="210" cy="176" rx="96" ry="76" fill="url(#d-core)"/>
+
+          <rect x="112" y="92" width="196" height="156" rx="48" fill="url(#d-shell)"/>
+          <rect x="112.8" y="92.8" width="194.4" height="154.4" rx="47.2" fill="none" stroke="#FFD9BC" stroke-opacity=".3"/>
+          <rect x="124" y="118" width="5" height="104" rx="2.5" fill="#FFFFFF" fill-opacity=".2"/>
+
+          <ellipse cx="163" cy="140" rx="30" ry="26" fill="#FF5A63" fill-opacity=".4"/>
+          <ellipse cx="257" cy="140" rx="30" ry="26" fill="#FF5A63" fill-opacity=".4"/>
+          <rect x="150" y="127" width="26" height="26" rx="7" fill="#43180F"/>
+          <rect x="244" y="127" width="26" height="26" rx="7" fill="#43180F"/>
+          <rect x="155" y="132" width="16" height="16" rx="4" fill="#FF8A8F"/>
+          <rect x="249" y="132" width="16" height="16" rx="4" fill="#FF8A8F"/>
+
+          <rect x="146" y="170" width="128" height="58" rx="10" fill="url(#d-glass)"/>
+          <rect x="146.7" y="170.7" width="126.6" height="56.6" rx="9.4" fill="none" stroke="#000000" stroke-opacity=".45"/>
+          <text class="sm" x="160" y="189" font-size="8" letter-spacing="1.6" fill="#8C7268">SEMAINE</text>
+          <text class="sb" x="160" y="216" font-size="24" fill="#FFDCD6">91%</text>
+          <rect x="222" y="197" width="42" height="6" rx="3" fill="#2C2421"/>
+          <rect x="222" y="197" width="38" height="6" rx="3" fill="#FF5A63"/>
+          <text class="sm" x="222" y="218" font-size="8" letter-spacing=".9" fill="#B0736F">LUN 09:00</text>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · h. 106 mm</span>
+          <span class="state">Corps entier — 91 % · rouge</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <span class="idx">04</span>
+        <h2>La lanterne<small>La mascotte translucide</small></h2>
+        <p>
+          Exactement le dessin du portrait, mais moulé dans un orange translucide&nbsp;:
+          <strong>tout le corps devient la jauge</strong>. Vert pâle quand ça va, rouge sourd
+          quand la semaine est cuite — on le voit du couloir sans lire un seul chiffre. On
+          devine la carte à l'intérieur, et c'est tant mieux.
+        </p>
+        <p>
+          C'est la version qui éclaire un coin de bureau la nuit. Aussi la moins chère à bien
+          faire&nbsp;: pas de peinture, pas de raccord de teinte.
+        </p>
+        <dl class="spec">
+          <div><dt>Caractère</dt><dd>Ambiant · nocturne · hacker assumé</dd></div>
+          <div><dt>Couleur</dt><dd><b>Orange translucide</b>, intérieur visible</dd></div>
+          <div><dt>Matière</dt><dd>Un seul bloc teinté, diffusant dans la masse</dd></div>
+          <div><dt>Finition</dt><dd>Brut de moule + fenêtre polie devant l'écran</dd></div>
+          <div><dt>Lumière</dt><dd>Le corps entier, du bout des oreilles aux pattes</dd></div>
+          <div><dt>Gabarit</dt><dd>86 × 106 × 66 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>Le translucide ne cache rien&nbsp;: chaque défaut de moule se voit</dd></div>
+        </dl>
+      </div>
+    </li>
+
+    <!-- ============ 05 LA TÊTE ============ -->
+    <li class="dir">
+      <figure class="stage">
+        <svg class="render" viewBox="56 26 308 248" role="img" aria-label="Grande tête de mascotte orange dont les deux yeux sont des écrans ronds : le pourcentage à gauche, un anneau de jauge à droite, et un bandeau de texte sous les yeux.">
+          <defs>
+            <linearGradient id="e-clay" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#F2A47C"/>
+              <stop offset=".46" stop-color="#D97757"/>
+              <stop offset="1" stop-color="#9E4327"/>
+            </linearGradient>
+            <linearGradient id="e-clay2" x1=".2" y1="0" x2=".85" y2="1">
+              <stop offset="0" stop-color="#D8825F"/>
+              <stop offset="1" stop-color="#8F3A21"/>
+            </linearGradient>
+            <radialGradient id="e-hl" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#FFE0CB" stop-opacity=".38"/>
+              <stop offset="1" stop-color="#FFE0CB" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="e-glass" x1=".25" y1="0" x2=".7" y2="1">
+              <stop offset="0" stop-color="#201814"/>
+              <stop offset="1" stop-color="#080606"/>
+            </linearGradient>
+            <radialGradient id="e-glow" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#F5A93B" stop-opacity=".4"/>
+              <stop offset="1" stop-color="#F5A93B" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="e-sh" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#000000" stop-opacity=".62"/>
+              <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="210" cy="256" rx="134" ry="15" fill="url(#e-sh)"/>
+
+          <rect x="140" y="46" width="36" height="66" rx="16" fill="url(#e-clay2)" transform="rotate(-8 158 79)"/>
+          <rect x="244" y="46" width="36" height="66" rx="16" fill="url(#e-clay2)" transform="rotate(8 262 79)"/>
+          <rect x="152" y="234" width="52" height="20" rx="10" fill="#A34A2C"/>
+          <rect x="216" y="234" width="52" height="20" rx="10" fill="#A34A2C"/>
+
+          <rect x="100" y="94" width="220" height="148" rx="46" fill="url(#e-clay)"/>
+          <ellipse cx="152" cy="126" rx="66" ry="30" fill="url(#e-hl)"/>
+
+          <ellipse cx="164" cy="156" rx="46" ry="42" fill="url(#e-glow)"/>
+          <ellipse cx="256" cy="156" rx="46" ry="42" fill="url(#e-glow)"/>
+
+          <circle cx="164" cy="156" r="36" fill="url(#e-glass)"/>
+          <circle cx="164" cy="156" r="36" fill="none" stroke="#3E2419" stroke-width="1.2"/>
+          <path d="M136 142a36 36 0 0 1 44-15 36 36 0 0 0-43 23Z" fill="#FFFFFF" fill-opacity=".06"/>
+          <text class="sb" x="164" y="160" font-size="27" fill="#F1E8DF" text-anchor="middle">76</text>
+          <text class="sm" x="164" y="176" font-size="8" letter-spacing="1.4" fill="#7C6E64" text-anchor="middle">POUR CENT</text>
+
+          <circle cx="256" cy="156" r="36" fill="url(#e-glass)"/>
+          <circle cx="256" cy="156" r="36" fill="none" stroke="#3E2419" stroke-width="1.2"/>
+          <circle cx="256" cy="156" r="24" fill="none" stroke="#2E2521" stroke-width="7"/>
+          <circle cx="256" cy="156" r="24" fill="none" stroke="#F5A93B" stroke-width="7" stroke-dasharray="114.6 150.8" transform="rotate(-90 256 156)"/>
+          <text class="sm" x="256" y="152" font-size="8" letter-spacing="1.2" fill="#7C6E64" text-anchor="middle">RESET</text>
+          <text class="sb" x="256" y="167" font-size="12" fill="#E9C793" text-anchor="middle">1H07</text>
+
+          <rect x="140" y="200" width="140" height="26" rx="7" fill="url(#e-glass)"/>
+          <rect x="140.7" y="200.7" width="138.6" height="24.6" rx="6.4" fill="none" stroke="#000000" stroke-opacity=".45"/>
+          <text class="sm" x="210" y="217" font-size="9" letter-spacing="1.5" fill="#9A8A7E" text-anchor="middle">SESSION 5H · SEM. 41%</text>
+        </svg>
+        <figcaption class="caption mono">
+          <span>Élévation avant · h. 78 mm</span>
+          <span class="state">Yeux-écrans — 76 % · ambre</span>
+        </figcaption>
+      </figure>
+
+      <div>
+        <span class="idx">05</span>
+        <h2>La tête<small>Les yeux sont l'écran</small></h2>
+        <p>
+          On supprime le corps et on garde le visage, agrandi. Les deux yeux deviennent
+          <strong>deux petits cadrans ronds</strong>&nbsp;: le chiffre à gauche, le compte à rebours
+          en anneau à droite. Sous les yeux, un mince bandeau donne le reste. La bestiole
+          ne porte plus un écran — elle vous regarde avec.
+        </p>
+        <p>
+          C'est la plus expressive des cinq, et la seule qui change d'expression&nbsp;: les
+          deux anneaux se remplissent, se vident, clignotent. Un visage qui réagit.
+        </p>
+        <dl class="spec">
+          <div><dt>Caractère</dt><dd>Expressif · frontal · vivant</dd></div>
+          <div><dt>Couleur</dt><dd><b>Terracotta</b> #D97757 · yeux noir profond</dd></div>
+          <div><dt>Matière</dt><dd>Coque opaque, deux hublots en verre bombé</dd></div>
+          <div><dt>Finition</dt><dd>Soft-touch mat · hublots brillants</dd></div>
+          <div><dt>Lumière</dt><dd>Deux cadrans + bandeau, rien autour</dd></div>
+          <div><dt>Gabarit</dt><dd>92 × 78 × 54 mm</dd></div>
+          <div class="risk"><dt>Réserve</dt><dd>Deux écrans ronds au lieu d'un&nbsp;: c'est la plus ambitieuse à réaliser</dd></div>
+        </dl>
+      </div>
+    </li>
+
+  </ol>
+
+  <!-- ============ CARTE ============ -->
+  <section class="section">
+    <h3>Le territoire couvert</h3>
+    <p class="kicker">
+      Deux questions se posent en même temps&nbsp;: à quel point on reste fidèle au dessin
+      d'origine, et à quel point l'objet assume d'être un appareil de mesure plutôt qu'un
+      personnage. Les cinq directions se répartissent proprement.
+    </p>
+    <div class="scroller">
+      <svg class="map-svg" viewBox="0 0 640 380" role="img" aria-label="Carte à deux axes : fidèle au dessin contre librement interprété en horizontal, personnage contre appareil en vertical. Le portrait en haut à gauche, la tête en haut à droite, la lanterne au centre gauche bas, le trapu en bas au centre, le galet à droite au milieu.">
+        <g stroke="#2A211D" stroke-width="1" stroke-dasharray="2 6">
+          <line x1="60" y1="115" x2="580" y2="115"/>
+          <line x1="60" y1="265" x2="580" y2="265"/>
+          <line x1="190" y1="40" x2="190" y2="340"/>
+          <line x1="450" y1="40" x2="450" y2="340"/>
+        </g>
+        <line x1="60" y1="190" x2="580" y2="190" stroke="#4A3D36" stroke-width="1.2"/>
+        <line x1="320" y1="40" x2="320" y2="340" stroke="#4A3D36" stroke-width="1.2"/>
+
+        <text class="sm" x="60" y="180" font-size="10.5" letter-spacing="1.6" fill="#75665E">FIDÈLE AU DESSIN</text>
+        <text class="sm" x="580" y="180" font-size="10.5" letter-spacing="1.6" fill="#75665E" text-anchor="end">LIBREMENT INTERPRÉTÉ</text>
+        <text class="sm" x="330" y="50" font-size="10.5" letter-spacing="1.6" fill="#75665E">PERSONNAGE</text>
+        <text class="sm" x="330" y="334" font-size="10.5" letter-spacing="1.6" fill="#75665E">APPAREIL DE MESURE</text>
+
+        <g>
+          <circle cx="132" cy="102" r="5.5" fill="#D97757"/>
+          <text class="sm" x="132" y="84" font-size="11" letter-spacing="1.3" fill="#D97757" text-anchor="middle">01 PORTRAIT</text>
+
+          <circle cx="468" cy="118" r="5.5" fill="#E9A57E"/>
+          <text class="sm" x="468" y="100" font-size="11" letter-spacing="1.3" fill="#E9A57E" text-anchor="middle">05 TÊTE</text>
+
+          <circle cx="196" cy="238" r="5.5" fill="#FF7A3D"/>
+          <text class="sm" x="196" y="260" font-size="11" letter-spacing="1.3" fill="#FF7A3D" text-anchor="middle">04 LANTERNE</text>
+
+          <circle cx="366" cy="286" r="5.5" fill="#E8763C"/>
+          <text class="sm" x="366" y="308" font-size="11" letter-spacing="1.3" fill="#E8763C" text-anchor="middle">02 TRAPU</text>
+
+          <circle cx="540" cy="176" r="5.5" fill="#C97A55"/>
+          <text class="sm" x="540" y="158" font-size="11" letter-spacing="1.3" fill="#C97A55" text-anchor="middle">03 GALET</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ LINE-UP ============ -->
+  <section class="section">
+    <h3>Les cinq à la même échelle</h3>
+    <p class="kicker">
+      C'est ce qu'on ne peut pas juger à l'écran. Une tasse sert de repère&nbsp;: aucune des
+      cinq ne dépasse la hauteur d'un mug, et toutes tiennent dans une main.
+    </p>
+    <div class="scroller">
+      <svg class="lineup-svg" viewBox="0 0 900 250" role="img" aria-label="Silhouettes des cinq variantes de la mascotte alignées sur une même ligne de sol, avec une tasse comme référence d'échelle.">
+        <line x1="20" y1="200" x2="880" y2="200" stroke="#4A3D36" stroke-width="1"/>
+
+        <!-- 01 portrait : 78 x 96 -->
+        <g fill="#8A5A44">
+          <rect x="66" y="99" width="14" height="30" rx="7"/>
+          <rect x="100" y="99" width="14" height="30" rx="7"/>
+          <rect x="55" y="120" width="70" height="72" rx="21"/>
+          <rect x="66" y="184" width="20" height="16" rx="7"/>
+          <rect x="94" y="184" width="20" height="16" rx="7"/>
+        </g>
+        <text class="sm" x="90" y="222" font-size="10" letter-spacing="1.1" fill="#75665E" text-anchor="middle">01 · 78 × 96 mm</text>
+
+        <!-- 02 trapu : 104 x 72 -->
+        <g fill="#8A5A44">
+          <rect x="222" y="124" width="16" height="20" rx="8"/>
+          <rect x="252" y="124" width="16" height="20" rx="8"/>
+          <rect x="190" y="140" width="110" height="60" rx="22"/>
+        </g>
+        <text class="sm" x="245" y="222" font-size="10" letter-spacing="1.1" fill="#75665E" text-anchor="middle">02 · 104 × 72 mm</text>
+
+        <!-- 03 galet : 96 x 64 -->
+        <g fill="#8A5A44">
+          <path d="M352 200c-8 0-10-20-5-34 5-15 22-24 53-24s48 9 53 24c5 14 3 34-5 34Z"/>
+          <ellipse cx="378" cy="145" rx="20" ry="10"/>
+          <ellipse cx="424" cy="144" rx="19" ry="10"/>
+        </g>
+        <text class="sm" x="400" y="222" font-size="10" letter-spacing="1.1" fill="#75665E" text-anchor="middle">03 · 96 × 64 mm</text>
+
+        <!-- 04 lanterne : 86 x 106 -->
+        <g fill="#8A5A44">
+          <rect x="521" y="89" width="15" height="32" rx="7.5"/>
+          <rect x="557" y="89" width="15" height="32" rx="7.5"/>
+          <rect x="506" y="112" width="78" height="76" rx="23"/>
+          <rect x="518" y="182" width="22" height="18" rx="8"/>
+          <rect x="550" y="182" width="22" height="18" rx="8"/>
+        </g>
+        <text class="sm" x="545" y="222" font-size="10" letter-spacing="1.1" fill="#75665E" text-anchor="middle">04 · 86 × 106 mm</text>
+
+        <!-- 05 tête : 92 x 78 -->
+        <g fill="#8A5A44">
+          <rect x="666" y="118" width="16" height="28" rx="8"/>
+          <rect x="700" y="118" width="16" height="28" rx="8"/>
+          <rect x="646" y="136" width="90" height="58" rx="20"/>
+          <rect x="662" y="190" width="24" height="10" rx="5"/>
+          <rect x="696" y="190" width="24" height="10" rx="5"/>
+        </g>
+        <text class="sm" x="691" y="222" font-size="10" letter-spacing="1.1" fill="#75665E" text-anchor="middle">05 · 92 × 78 mm</text>
+
+        <!-- référence tasse -->
+        <g fill="none" stroke="#3A2F29" stroke-width="2">
+          <path d="M796 105h80v66a29 29 0 0 1-29 29h-22a29 29 0 0 1-29-29Z"/>
+          <path d="M876 120h11a17 17 0 0 1 0 34h-11"/>
+        </g>
+        <text class="sm" x="840" y="222" font-size="10" letter-spacing="1.1" fill="#4A3D36" text-anchor="middle">TASSE · REPÈRE</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ VERDICT ============ -->
+  <section class="section">
+    <h3>Ce que je maquetterais en premier</h3>
+    <p class="kicker">
+      Trois volumes imprimés en blanc, sans électronique, posés sur un vrai bureau pendant
+      une semaine. C'est le seul test qui départage ces cinq-là — la taille et la posture ne
+      se jugent pas à l'écran.
+    </p>
+
+    <div class="verdict">
+      <article>
+        <h4>D'abord — 02 Le trapu</h4>
+        <p>
+          Le meilleur compromis&nbsp;: <b>encore clairement la mascotte</b>, mais avec un écran
+          assez large pour tout dire d'un coup d'œil. C'est la seule où l'on ne choisit pas
+          entre mignon et utile.
+        </p>
+      </article>
+      <article>
+        <h4>Ensuite — 01 Le portrait</h4>
+        <p>
+          C'est elle qu'on photographie et qu'on offre. Elle sert de <b>référence</b>&nbsp;: si
+          une autre variante est plus jolie qu'elle en vrai, c'est un vrai signal.
+        </p>
+      </article>
+      <article>
+        <h4>Le pari — 04 La lanterne</h4>
+        <p>
+          Corps entier lumineux&nbsp;: c'est l'effet le plus fort des cinq, et paradoxalement
+          la moins chère à produire correctement. <b>Rien à peindre, rien à assortir.</b>
+        </p>
+      </article>
+    </div>
+
+    <div class="closing">
+      <p>
+        Le galet et la tête restent au chaud. Le galet est la porte de sortie si un jour la
+        forme d'origine pose problème&nbsp;: en le lissant encore un peu, il devient un objet
+        neutre qui garde juste deux yeux carrés.
+      </p>
+      <p>
+        Un seul point à trancher avant d'engager le moindre outillage&nbsp;: plus la
+        ressemblance est fidèle, plus il faudra une licence pour vendre. Ça ne change rien
+        aux maquettes — ça change tout à la suite.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="mono">iBurned · Recherche de forme · Planche 01</span>
+    <span class="mono">Volumes indicatifs — rien n'est coté</span>
+  </footer>
+
+</div>
